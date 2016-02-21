@@ -2,6 +2,7 @@ package com.mmm.parq;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -14,11 +15,23 @@ import android.support.v4.widget.DrawerLayout;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
 
-public class DriverActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener {
+public class DriverActivity extends FragmentActivity implements OnMapReadyCallback,
+                                                                GoogleMap.OnMyLocationButtonClickListener,
+                                                                GoogleApiClient.ConnectionCallbacks,
+                                                                GoogleApiClient.OnConnectionFailedListener {
+
+    private GoogleApiClient mGoogleApiClient;
+    private Location mLastLocation;
 
     private GoogleMap mMap;
     private DrawerLayout drawerLayout;
@@ -46,6 +59,15 @@ public class DriverActivity extends FragmentActivity implements OnMapReadyCallba
                 return true;
             }
         });
+
+        // Create an instance of GoogleAPIClient.
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
     }
 
     @Override
@@ -57,6 +79,47 @@ public class DriverActivity extends FragmentActivity implements OnMapReadyCallba
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStart() {
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        mMap.setOnMyLocationButtonClickListener(this);
+        enableMyLocation();
+        onMyLocationButtonClick();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == FINE_LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Enable the my location layer if the permission has been granted.
+                enableMyLocation();
+            }
+        } else if(requestCode == COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Enable the my location layer if the permission has been granted.
+                enableMyLocation();
+            }
+        } else {
+            return;
+        }
     }
 
     private void enableMyLocation() {
@@ -76,33 +139,7 @@ public class DriverActivity extends FragmentActivity implements OnMapReadyCallba
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == FINE_LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Enable the my location layer if the permission has been granted.
-                enableMyLocation();
-            }
-        } else if(requestCode == COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Enable the my location layer if the permission has been granted.
-                enableMyLocation();
-            }
-        } else {
-          return;
-        }
-    }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-
-        mMap.setOnMyLocationButtonClickListener(this);
-        enableMyLocation();
-    }
 
     @Override
     public boolean onMyLocationButtonClick() {
@@ -110,5 +147,41 @@ public class DriverActivity extends FragmentActivity implements OnMapReadyCallba
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         return false;
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    FINE_LOCATION_PERMISSION_REQUEST_CODE);
+        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    COARSE_LOCATION_PERMISSION_REQUEST_CODE);
+        } else if (mGoogleApiClient != null) {
+            // Access to the location has been granted to the app.
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (mLastLocation != null) {
+                CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
+                        new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12);
+                mMap.animateCamera(cameraUpdate);
+            }
+        }
+
+
+        return;
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        return;
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        return;
     }
 }
