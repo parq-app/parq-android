@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_marginTop="24dp"
+    android:layout_height="150dp">
+    <ImageView
+        android:id="@+id/profile_image"
+        android:layout_width="76dp"
+        android:layout_height="76dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:src="@drawable/person"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="My Name"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingBottom="4dp"
+        android:gravity="left"
+        android:layout_above="@+id/email"
+        android:layout_alignStart="@+id/profile_image"
+        android:id="@+id/name"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:paddingBottom="8dp"
+        android:gravity="left"
+        android:layout_alignLeft="@+id/profile_image"
+        android:layout_alignParentBottom="true"
+        android:text="kenz@gmail.com"
+        android:id="@+id/email"/>
+</RelativeLayout>
