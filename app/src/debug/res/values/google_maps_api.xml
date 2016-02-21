@@ -16,4 +16,5 @@
     string in this file.
     -->
     <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyD5HFQ5s5rIb8eduKNt36UPcSo0QIw-TuA</string>
+    <string name="google_app_id">638807128791</string>
 </resources>
