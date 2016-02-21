@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group
-        android:checkableBehavior="single">
+    <item
+        android:id="@+id/drawer_home"
+        android:checked="true"
+        android:icon="@drawable/ic_place_24dp"
+        android:title="@string/home"/>
 
-        <item
-            android:id="@+id/drawer_home"
-            android:checked="true"
-            android:icon="@drawable/ic_accessibility_24dp"
-            android:title="hello"/>
+    <item
+        android:id="@+id/drawer_payment"
+        android:icon="@drawable/ic_credit_card_24dp"
+        android:title="@string/payment"/>
 
-        <item
-            android:id="@+id/drawer_favourite"
-            android:icon="@drawable/ic_accessibility_24dp"
-            android:title="hi"/>
+    <item
+        android:id="@+id/drawer_history"
+        android:icon="@drawable/ic_restore_24dp"
+        android:title="@string/history"/>
 
-        <item
-            android:id="@+id/drawer_settings"
-            android:icon="@drawable/ic_accessibility_24dp"
-            android:title="yo"/>
+    <item
+        android:id="@+id/drawer_settings"
+        android:icon="@drawable/ic_settings_24dp"
+        android:title="@string/settings"/>
 
-    </group>
 </menu>
