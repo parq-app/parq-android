@@ -12,6 +12,7 @@
         tools:context=".activities.DriverActivity" />
     <Button
         style="@style/Widget.AppCompat.Button"
+        android:id="@+id/findparkingbutton"
         android:text="@string/find_spot_button_text"
         android:background="@drawable/rounded_button"
         android:textColor="@android:color/white"
