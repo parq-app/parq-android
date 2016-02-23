@@ -31,6 +31,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
@@ -104,7 +105,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
     private void drawDirectionsPath(Reservation res) {
         String geohash = res.getAttribute("geohash");
-        LatLong latLong = GeoHash.decodeHash(geohash);
+        final LatLong latLong = GeoHash.decodeHash(geohash);
         String apiKey = getResources().getString(R.string.google_maps_key);
 
         // Request directions
@@ -121,6 +122,10 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                     polylineOptions.addAll(path);
                     polylineOptions.width(10);
                     polylineOptions.color(Color.BLUE);
+
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
+                            mLastLocation.getLongitude())));
                     mMap.addPolyline(polylineOptions);
                 } catch (RouteNotFoundException e) {
                     Log.d("DriverHome", "No route found: " + e.toString());
