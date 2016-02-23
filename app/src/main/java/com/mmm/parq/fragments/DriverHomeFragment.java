@@ -22,8 +22,8 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.github.davidmoten.geo.LatLong;
 import com.github.davidmoten.geo.GeoHash;
+import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -35,7 +35,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
 import com.mmm.parq.exceptions.RouteNotFoundException;
+import com.mmm.parq.layouts.ReservedSpotCardView;
 import com.mmm.parq.models.Reservation;
+import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.DirectionsParser;
 import com.mmm.parq.utils.HttpClient;
 
@@ -49,6 +51,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private GoogleMap mMap;
     private Button mFindParkingButton;
     private RequestQueue mQueue;
+    private Gson mGson;
 
     static private int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -66,6 +69,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+        mGson = new Gson();
 
         mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         mFindParkingButton = (Button) view.findViewById(R.id.findparkingbutton);
@@ -108,6 +113,24 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         });
 
         return view;
+    }
+    private void showSpotCard(Reservation res, final String timeToSpot) {
+        // Request the spot
+        String url = String.format("%s/%s/%s", getResources().getString(R.string.api_address),
+                getResources().getString(R.string.spots_endpoint), res.getAttribute("spotId"));
+        StringRequest spotRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Spot spot = mGson.fromJson(response, Spot.class);
+                ReservedSpotCardView reservedSpotCardView = new ReservedSpotCardView(getActivity(), spot, timeToSpot);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+
     }
 
     // Send a request to create a reservation for the current user from the reservations endpoint.

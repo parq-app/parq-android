@@ -17,12 +17,10 @@
         android:background="@drawable/rounded_button"
         android:textColor="@android:color/white"
         android:textSize="24sp"
-        android:layout_width="match_parent"
+        android:layout_width="360dp"
         android:layout_height="64dp"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:textAllCaps="false"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
         android:layout_marginBottom="4dp"/>
 </RelativeLayout>
