@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -49,10 +48,12 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private Location mLastLocation;
     private GoogleMap mMap;
     private Button mFindParkingButton;
-    private RequestQueue queue;
+    private RequestQueue mQueue;
 
     static private int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
+
+    static private int ZOOM_LEVEL = 16;
 
     public DriverHomeFragment() {}
 
@@ -69,8 +70,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mFindParkingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
-                String url = "http://162.243.244.79/reservations";
+                mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+                String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.reservations_endpint));
                 StringRequest reservationRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -96,7 +97,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                         return params;
                     }
                 };
-                queue.add(reservationRequest);
+                mQueue.add(reservationRequest);
             }
         });
 
@@ -109,8 +110,10 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         String apiKey = getResources().getString(R.string.google_maps_key);
 
         // Request directions
-        String directionsUrl = String.format("https://maps.googleapis.com/maps/api/directions/json?origin=%f,%f&destination=%f,%f&key=%s\t\n",
-                mLastLocation.getLatitude(), mLastLocation.getLongitude(), latLong.getLat(), latLong.getLon(), apiKey);
+        String directionsUrl = String.format("%s?origin=%f,%f&destination=%f,%f&key=%s\t\n",
+                getResources().getString(R.string.google_directions_endpoint),
+                mLastLocation.getLatitude(), mLastLocation.getLongitude(), latLong.getLat(),
+                latLong.getLon(), apiKey);
         StringRequest directionsRequest = new StringRequest(Request.Method.GET, directionsUrl, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -138,7 +141,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 Log.d("Directions Error: ", error.toString());
             }
         }) {} ;
-        queue.add(directionsRequest);
+        mQueue.add(directionsRequest);
     }
 
     @Override
@@ -149,7 +152,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         enableMyLocation();
 
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
-                new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 16);
+                new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), ZOOM_LEVEL);
         mMap.animateCamera(cameraUpdate);
     }
 
