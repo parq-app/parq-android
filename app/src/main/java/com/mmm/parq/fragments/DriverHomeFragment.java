@@ -148,7 +148,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         enableMyLocation();
 
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
-                new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12);
+                new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 16);
         mMap.animateCamera(cameraUpdate);
     }
 
@@ -192,7 +192,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(getActivity(), "MyLocation button clicked", Toast.LENGTH_SHORT).show();
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         return false;
