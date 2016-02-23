@@ -127,6 +127,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                     mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
                             mLastLocation.getLongitude())));
                     mMap.addPolyline(polylineOptions);
+                    mFindParkingButton.setText("Navigate to spot");
                 } catch (RouteNotFoundException e) {
                     Log.d("DriverHome", "No route found: " + e.toString());
                 }
