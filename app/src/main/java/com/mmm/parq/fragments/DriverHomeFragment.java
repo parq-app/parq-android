@@ -3,6 +3,7 @@ package com.mmm.parq.fragments;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -22,16 +23,24 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.github.davidmoten.geo.LatLong;
+import com.github.davidmoten.geo.GeoHash;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.gson.Gson;
 import com.mmm.parq.R;
+import com.mmm.parq.exceptions.RouteNotFoundException;
+import com.mmm.parq.models.Reservation;
+import com.mmm.parq.utils.DirectionsParser;
 import com.mmm.parq.utils.HttpClient;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
@@ -39,6 +48,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private Location mLastLocation;
     private GoogleMap mMap;
     private Button mFindParkingButton;
+    private RequestQueue queue;
 
     static private int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -58,13 +68,16 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mFindParkingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext())
-                        .getRequestQueue();
+                queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
                 String url = "http://162.243.244.79/reservations";
-                StringRequest request = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+                StringRequest reservationRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Log.d("Response:", response);
+                        Log.d("Reservation Response:", response);
+                        final Gson gson = new Gson();
+                        Reservation res = gson.fromJson(response, Reservation.class);
+
+                        drawDirectionsPath(res);
                     }
                 }, new Response.ErrorListener() {
                     @Override
@@ -82,11 +95,44 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                         return params;
                     }
                 };
-                queue.add(request);
+                queue.add(reservationRequest);
             }
         });
 
         return view;
+    }
+
+    private void drawDirectionsPath(Reservation res) {
+        String geohash = res.getAttribute("geohash");
+        LatLong latLong = GeoHash.decodeHash(geohash);
+        String apiKey = getResources().getString(R.string.google_maps_key);
+
+        // Request directions
+        String directionsUrl = String.format("https://maps.googleapis.com/maps/api/directions/json?origin=%f,%f&destination=%f,%f&key=%s\t\n",
+                mLastLocation.getLatitude(), mLastLocation.getLongitude(), latLong.getLat(), latLong.getLon(), apiKey);
+        StringRequest directionsRequest = new StringRequest(Request.Method.GET, directionsUrl, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                DirectionsParser parser = new DirectionsParser(response);
+                // Parse the directions api response
+                try {
+                    List<LatLng> path = parser.parsePath();
+                    PolylineOptions polylineOptions = new PolylineOptions();
+                    polylineOptions.addAll(path);
+                    polylineOptions.width(10);
+                    polylineOptions.color(Color.BLUE);
+                    mMap.addPolyline(polylineOptions);
+                } catch (RouteNotFoundException e) {
+                    Log.d("DriverHome", "No route found: " + e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("Directions Error: ", error.toString());
+            }
+        }) {} ;
+        queue.add(directionsRequest);
     }
 
     @Override
@@ -100,7 +146,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 12);
         mMap.animateCamera(cameraUpdate);
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
