@@ -11,9 +11,18 @@
         android:layout_height="match_parent"
         tools:context=".activities.DriverActivity" />
     <Button
+        style="@style/Widget.AppCompat.Button"
+        android:id="@+id/findparkingbutton"
         android:text="@string/find_spot_button_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:background="@drawable/rounded_button"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
         android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true" />
+        android:layout_alignParentBottom="true"
+        android:textAllCaps="false"
+        android:layout_marginLeft="4dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginBottom="4dp"/>
 </RelativeLayout>
