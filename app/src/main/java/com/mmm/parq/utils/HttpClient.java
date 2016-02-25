@@ -6,6 +6,7 @@ import android.util.LruCache;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
@@ -58,5 +59,10 @@ public class HttpClient {
 
     public ImageLoader getImageLoader() {
         return mImageLoader;
+    }
+
+    public interface VolleyCallback<T> {
+        void onSuccess(T response);
+        void onError(VolleyError error);
     }
 }

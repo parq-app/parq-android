@@ -52,8 +52,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
     static private int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
-
     static private int ZOOM_LEVEL = 16;
+
+    static private String CLASS = "DriverHomeFragment";
 
     public DriverHomeFragment() {}
 
@@ -66,47 +67,80 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         mFindParkingButton = (Button) view.findViewById(R.id.findparkingbutton);
         mFindParkingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
-                String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.reservations_endpint));
-                StringRequest reservationRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+                // Reserve a spot for the user.
+                requestReservation(new HttpClient.VolleyCallback<String>() {
                     @Override
-                    public void onResponse(String response) {
-                        Log.d("Reservation Response:", response);
+                    public void onSuccess(String response) {
+                        // Parse the reservation response into a Reservation
                         final Gson gson = new Gson();
                         Reservation res = gson.fromJson(response, Reservation.class);
 
-                        drawDirectionsPath(res);
+                        // Request directions to the reserved spot using Google Directions API
+                        String geohash = res.getAttribute("geohash");
+                        final LatLong latLong = GeoHash.decodeHash(geohash);
+                        requestDirections(latLong, new HttpClient.VolleyCallback<String>() {
+                            @Override
+                            public void onSuccess(String response) {
+                                // Display the route on the map
+                                drawDirectionsPath(response, latLong);
+                                // Update the button
+                                mFindParkingButton.setText("Navigate to spot");
+                            }
+
+                            @Override
+                            public void onError(VolleyError error) {
+                                Log.d(CLASS, error.getMessage());
+                            }
+                        });
                     }
-                }, new Response.ErrorListener() {
+
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Error:", error.toString());
+                    public void onError(VolleyError error) {
+                        Log.d(CLASS + ":Error", error.toString());
                     }
-                }) {
-                    @Override
-                    protected Map<String, String> getParams() {
-                        Map<String, String>  params = new HashMap<String, String>();
-                        // TODO(kenzshelley) REPLACE THIS WITH TRUE USERID AFTER IMPLEMENTING LOGIN
-                        params.put("userId", "2495cce6-0fa1-4a12-88d3-84a062832673");
-                        params.put("latitude", String.valueOf(mLastLocation.getLatitude()));
-                        params.put("longitude", String.valueOf(mLastLocation.getLongitude()));
-                        return params;
-                    }
-                };
-                mQueue.add(reservationRequest);
+                });
             }
         });
 
         return view;
     }
 
-    private void drawDirectionsPath(Reservation res) {
-        String geohash = res.getAttribute("geohash");
-        final LatLong latLong = GeoHash.decodeHash(geohash);
+    // Send a request to create a reservation for the current user from the reservations endpoint.
+    private void requestReservation(final HttpClient.VolleyCallback<String> callback) {
+        String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.reservations_endpint));
+        StringRequest reservationRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                callback.onSuccess(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onError(error);
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String>  params = new HashMap<String, String>();
+                // TODO(kenzshelley) REPLACE THIS WITH TRUE USERID AFTER IMPLEMENTING LOGIN
+                params.put("userId", "2495cce6-0fa1-4a12-88d3-84a062832673");
+                params.put("latitude", String.valueOf(mLastLocation.getLatitude()));
+                params.put("longitude", String.valueOf(mLastLocation.getLongitude()));
+                return params;
+            }
+        };
+
+        mQueue.add(reservationRequest);
+    }
+
+    // Send a request to Google Directions API for directions from the user's current location to their
+    // reserved spot.
+    private void requestDirections(LatLong latLong, final HttpClient.VolleyCallback<String> callback) {
         String apiKey = getResources().getString(R.string.google_maps_key);
 
         // Request directions
@@ -117,31 +151,35 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         StringRequest directionsRequest = new StringRequest(Request.Method.GET, directionsUrl, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                DirectionsParser parser = new DirectionsParser(response);
-                // Parse the directions api response
-                try {
-                    List<LatLng> path = parser.parsePath();
-                    PolylineOptions polylineOptions = new PolylineOptions();
-                    polylineOptions.addAll(path);
-                    polylineOptions.width(10);
-                    polylineOptions.color(Color.BLUE);
-
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
-                            mLastLocation.getLongitude())));
-                    mMap.addPolyline(polylineOptions);
-                    mFindParkingButton.setText("Navigate to spot");
-                } catch (RouteNotFoundException e) {
-                    Log.d("DriverHome", "No route found: " + e.toString());
-                }
+               callback.onSuccess(response);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("Directions Error: ", error.toString());
+                callback.onError(error);
             }
-        }) {} ;
+        });
+
         mQueue.add(directionsRequest);
+    }
+
+    private void drawDirectionsPath(String directionsResponse, LatLong latLong) {
+        DirectionsParser parser = new DirectionsParser(directionsResponse);
+        // Parse the directions api response
+        try {
+            List<LatLng> path = parser.parsePath();
+            PolylineOptions polylineOptions = new PolylineOptions();
+            polylineOptions.addAll(path);
+            polylineOptions.width(10);
+            polylineOptions.color(Color.BLUE);
+
+            mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
+            mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
+                    mLastLocation.getLongitude())));
+            mMap.addPolyline(polylineOptions);
+        } catch (RouteNotFoundException e) {
+            Log.d(CLASS, "No route found: " + e.toString());
+        }
     }
 
     @Override
