@@ -45,13 +45,9 @@ public class DirectionsParser {
 
     // Returns the duration of the route in a String of the following format:
     // 'x hours y mins;.
-    public String parseTime() throws RouteNotFoundException {
+    public String parseTime() {
         if (mRouteLegs == null) {
             mRouteLegs = parseRouteLegs();
-        }
-        // In theory this shouldn't ever happen, because we will abort before now.
-        if (mRouteLegs.size() == 0) {
-            throw new RouteNotFoundException();
         }
 
         return mRouteLegs.get(0).getAsJsonObject().get("duration").getAsJsonObject().get("text").getAsString();

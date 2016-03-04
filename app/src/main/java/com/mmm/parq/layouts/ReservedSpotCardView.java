@@ -1,6 +1,7 @@
 package com.mmm.parq.layouts;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,25 +26,26 @@ public class ReservedSpotCardView extends CardView {
        TextView addr = (TextView) view.findViewById(R.id.addr);
        addr.setText(spot.getAttribute("addr"));
        TextView cost = (TextView) view.findViewById(R.id.cost);
-       cost.setText(spot.getAttribute("costPerHour"));
+       cost.setText(String.format("$%s/hr", spot.getAttribute("costPerHour")));
        TextView time = (TextView) view.findViewById(R.id.time);
        time.setText(timeToSpot);
 
        LinearLayout linearLayout = (LinearLayout) view.findViewById(R.id.rating);
+
        // Create rating stars & append based on spot rating
        int rating = Integer.parseInt(spot.getAttribute("rating"));
-       rating = 4;
-       for (int i = 0; i < rating; ++i) {
-           ImageView star = new ImageView(context);
-           star.setImageDrawable(getResources().getDrawable(R.drawable.star));
-           linearLayout.addView(star);
-       }
        TextView ratingText = (TextView) view.findViewById(R.id.rating_number);
-       ratingText.setText(String.format("(%d)", rating));
 
        // Display something saying that the spot hasn't had a driver yet
        if (rating == 0) {
-
+           ratingText.setText(getResources().getString(R.string.no_ratings));
+       } else {
+           for (int i = 0; i < rating; ++i) {
+               ImageView star = new ImageView(context);
+               star.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.star));
+               linearLayout.addView(star);
+           }
+           ratingText.setText(String.format("(%d)", rating));
        }
 
        addView(view);
