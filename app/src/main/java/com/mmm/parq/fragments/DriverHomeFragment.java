@@ -16,14 +16,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
-import com.github.davidmoten.geo.LatLong;
 import com.github.davidmoten.geo.GeoHash;
+import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,9 +34,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
 import com.mmm.parq.exceptions.RouteNotFoundException;
+import com.mmm.parq.layouts.ReservedSpotCardView;
 import com.mmm.parq.models.Reservation;
+import com.mmm.parq.models.Spot;
+import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.DirectionsParser;
 import com.mmm.parq.utils.HttpClient;
 
@@ -49,10 +56,16 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private GoogleMap mMap;
     private Button mFindParkingButton;
     private RequestQueue mQueue;
+    private Gson mGson;
+    private RelativeLayout mRelativeLayout;
+    private Spot mCurrentSpot;
 
     static private int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
     static private int ZOOM_LEVEL = 16;
+    static private int CARD_WIDTH = 380;
+    static private int CARD_BOTTOM_MARGIN = 4;
+    static private int LINE_WIDTH = 20;
 
     static private String CLASS = "DriverHomeFragment";
 
@@ -66,48 +79,127 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+        mGson = new Gson();
+        mRelativeLayout = (RelativeLayout) view.findViewById(R.id.driver_home_layout);
+        mCurrentSpot = null;
 
         mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         mFindParkingButton = (Button) view.findViewById(R.id.findparkingbutton);
         mFindParkingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Reserve a spot for the user.
-                requestReservation(new HttpClient.VolleyCallback<String>() {
-                    @Override
-                    public void onSuccess(String response) {
-                        // Parse the reservation response into a Reservation
-                        final Gson gson = new Gson();
-                        Reservation res = gson.fromJson(response, Reservation.class);
+                // If the button is in 'find spot' mode, reserve a spot
+                if (getString(R.string.find_spot_button_text).equals(mFindParkingButton.getText())) {
+                    // Reserve a spot for the user.
+                    reserveSpot();
+                } else {
+                    // Otherwise, navigate to the spot
+                    // TODO(kenzshelley) actually send an intent to navigate to the currently reserved spot.
+                    if (mCurrentSpot == null) {
+                        Log.d(CLASS, "No spot has been reserved!");
+                    }
+                }
+            }
+        });
 
-                        // Request directions to the reserved spot using Google Directions API
-                        String geohash = res.getAttribute("geohash");
-                        final LatLong latLong = GeoHash.decodeHash(geohash);
-                        requestDirections(latLong, new HttpClient.VolleyCallback<String>() {
+        return view;
+    }
+
+    private void reserveSpot() {
+        requestReservation(new HttpClient.VolleyCallback<String>() {
+            @Override
+            public void onSuccess(String response) {
+                // Parse the reservation response into a Reservation
+                final Reservation res = mGson.fromJson(response, Reservation.class);
+
+                // Request directions to the reserved spot using Google Directions API
+                String geohash = res.getAttribute("geohash");
+                final LatLong latLong = GeoHash.decodeHash(geohash);
+                requestDirections(latLong, new HttpClient.VolleyCallback<String>() {
+                    @Override
+                    public void onSuccess(String directionsResponse) {
+                        DirectionsParser parser = new DirectionsParser(directionsResponse);
+
+                        // Display the route on the map
+                        drawDirectionsPath(parser, latLong);
+                        final String timeToSpot = parser.parseTime();
+
+                        // Update the button
+                        mFindParkingButton.setText(getString(R.string.navigate_text));
+                        Log.d(CLASS, "ABOUT TO REQUEST SPOT");
+
+                        // Request the spot for this reservation
+                        requestSpot(res.getAttribute("spotId"), new HttpClient.VolleyCallback<String>() {
                             @Override
-                            public void onSuccess(String response) {
-                                // Display the route on the map
-                                drawDirectionsPath(response, latLong);
-                                // Update the button
-                                mFindParkingButton.setText("Navigate to spot");
+                            public void onSuccess(String spotResponse) {
+                                showSpotCard(spotResponse, timeToSpot);
                             }
 
                             @Override
                             public void onError(VolleyError error) {
-                                Log.d(CLASS, error.getMessage());
+                                Log.d(CLASS, error.toString());
                             }
                         });
                     }
 
                     @Override
                     public void onError(VolleyError error) {
-                        Log.d(CLASS + ":Error", error.toString());
+                        Log.d(CLASS, error.getMessage());
                     }
                 });
             }
+
+            @Override
+            public void onError(VolleyError error) {
+                Log.d(CLASS + ":Error", error.toString());
+            }
+        });
+    }
+
+    private Spot parseSpotResponse(String response) {
+        JsonParser parser = new JsonParser();
+        JsonObject spotObj = parser.parse(response).getAsJsonObject();
+        String id = spotObj.get("id").getAsString();
+        JsonObject attrObj = spotObj.get("attributes").getAsJsonObject();
+        HashMap<String, String> attrs = mGson.fromJson(attrObj, new TypeToken<HashMap<String, String>>(){}.getType());
+
+        return new Spot(id, attrs);
+    }
+
+    private void requestSpot(String spotId, final HttpClient.VolleyCallback<String> callback) {
+        // Request the spot
+        String url = String.format("%s/%s/%s", getString(R.string.api_address),
+                getString(R.string.spots_endpoint), spotId);
+        StringRequest spotRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                callback.onSuccess(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onError(error);
+
+            }
         });
 
-        return view;
+        mQueue.add(spotRequest);
+    }
+
+    private void showSpotCard(String spotResponse, String timeToSpot) {
+        Spot spot = parseSpotResponse(spotResponse);
+        // set this as the current local spot
+        mCurrentSpot = spot;
+
+        ReservedSpotCardView reservedSpotCardView = new ReservedSpotCardView(getActivity(), spot, timeToSpot);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ConversionUtils.dpToPx(getActivity(), CARD_WIDTH),
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ABOVE, R.id.findparkingbutton);
+        params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        params.bottomMargin = ConversionUtils.dpToPx(getActivity(), CARD_BOTTOM_MARGIN);
+
+        mRelativeLayout.addView(reservedSpotCardView, params);
     }
 
     // Send a request to create a reservation for the current user from the reservations endpoint.
@@ -126,7 +218,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         }) {
             @Override
             protected Map<String, String> getParams() {
-                Map<String, String>  params = new HashMap<String, String>();
+                Map<String, String>  params = new HashMap<>();
                 // TODO(kenzshelley) REPLACE THIS WITH TRUE USERID AFTER IMPLEMENTING LOGIN
                 params.put("userId", "2495cce6-0fa1-4a12-88d3-84a062832673");
                 params.put("latitude", String.valueOf(mLastLocation.getLatitude()));
@@ -141,11 +233,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     // Send a request to Google Directions API for directions from the user's current location to their
     // reserved spot.
     private void requestDirections(LatLong latLong, final HttpClient.VolleyCallback<String> callback) {
-        String apiKey = getResources().getString(R.string.google_maps_key);
+        String apiKey = getString(R.string.google_maps_key);
 
         // Request directions
         String directionsUrl = String.format("%s?origin=%f,%f&destination=%f,%f&key=%s\t\n",
-                getResources().getString(R.string.google_directions_endpoint),
+                getString(R.string.google_directions_endpoint),
                 mLastLocation.getLatitude(), mLastLocation.getLongitude(), latLong.getLat(),
                 latLong.getLon(), apiKey);
         StringRequest directionsRequest = new StringRequest(Request.Method.GET, directionsUrl, new Response.Listener<String>() {
@@ -163,14 +255,13 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mQueue.add(directionsRequest);
     }
 
-    private void drawDirectionsPath(String directionsResponse, LatLong latLong) {
-        DirectionsParser parser = new DirectionsParser(directionsResponse);
+    private void drawDirectionsPath(DirectionsParser parser, LatLong latLong) {
         // Parse the directions api response
         try {
             List<LatLng> path = parser.parsePath();
             PolylineOptions polylineOptions = new PolylineOptions();
             polylineOptions.addAll(path);
-            polylineOptions.width(10);
+            polylineOptions.width(LINE_WIDTH);
             polylineOptions.color(Color.BLUE);
 
             mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
@@ -207,8 +298,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 // Enable the my location layer if the permission has been granted.
                 enableMyLocation();
             }
-        } else {
-            return;
         }
     }
 

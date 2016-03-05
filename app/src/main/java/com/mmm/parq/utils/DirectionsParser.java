@@ -1,7 +1,5 @@
 package com.mmm.parq.utils;
 
-import android.util.Log;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -15,21 +13,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DirectionsParser {
-    private String jsonString;
+    private String mJsonString;
+    private JsonArray mRouteLegs;
 
     public DirectionsParser(String response) {
-        this.jsonString = response;
+        this.mJsonString = response;
+        this.mRouteLegs = null;
     }
 
+    // Returns a list of LatLngs that correspond to the polyline for the route.
     public List<LatLng> parsePath() throws RouteNotFoundException {
-        JsonParser parser = new JsonParser();
-        JsonObject main = parser.parse(jsonString).getAsJsonObject();
-        JsonArray routes = main.get("routes").getAsJsonArray();
-        if (routes.size() == 0) {
+        if (mRouteLegs == null) {
+            mRouteLegs = parseRouteLegs();
+        }
+        if (mRouteLegs.size() == 0) {
             throw new RouteNotFoundException();
         }
 
-        JsonArray steps = routes.get(0).getAsJsonObject().get("legs").getAsJsonArray().get(0).getAsJsonObject().get("steps").getAsJsonArray();
+        JsonArray steps = mRouteLegs.get(0).getAsJsonObject().get("steps").getAsJsonArray();
         Gson gson = new Gson();
         List<JsonObject> stepsArray = gson.fromJson(steps, new TypeToken<List<JsonObject>>(){}.getType());
 
@@ -40,5 +41,26 @@ public class DirectionsParser {
         }
 
         return decodedPath;
+    }
+
+    // Returns the duration of the route in a String of the following format:
+    // 'x hours y mins;.
+    public String parseTime() {
+        if (mRouteLegs == null) {
+            mRouteLegs = parseRouteLegs();
+        }
+
+        return mRouteLegs.get(0).getAsJsonObject().get("duration").getAsJsonObject().get("text").getAsString();
+    }
+
+    private JsonArray parseRouteLegs() {
+        JsonParser parser = new JsonParser();
+        JsonObject main = parser.parse(mJsonString).getAsJsonObject();
+        JsonArray routes = main.get("routes").getAsJsonArray();
+        if (routes.size() == 0) {
+            return new JsonArray();
+        }
+
+        return routes.get(0).getAsJsonObject().get("legs").getAsJsonArray();
     }
 }

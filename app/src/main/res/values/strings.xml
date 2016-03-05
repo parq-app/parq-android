@@ -6,7 +6,10 @@
     <string name="history">History</string>
     <string name="settings">Settings</string>
     <string name="find_spot_button_text">Find Spot</string>
+    <string name="navigate_text">Navigate to spot</string>
     <string name="api_address">http://162.243.244.79</string>
     <string name="reservations_endpint">reservations</string>
+    <string name="spots_endpoint">spots</string>
     <string name="google_directions_endpoint">https://maps.googleapis.com/maps/api/directions/json</string>
+    <string name="no_ratings">No ratings</string>
 </resources>
