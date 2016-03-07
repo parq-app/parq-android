@@ -11,5 +11,19 @@
     <string name="reservations_endpint">reservations</string>
     <string name="spots_endpoint">spots</string>
     <string name="google_directions_endpoint">https://maps.googleapis.com/maps/api/directions/json</string>
+    <string name="firebase_endpoint">https://parq.firebaseio.com</string>
     <string name="no_ratings">No ratings</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_register">Register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="snackbar_register">Registration successful! Please log in.</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is invalid</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
 </resources>
