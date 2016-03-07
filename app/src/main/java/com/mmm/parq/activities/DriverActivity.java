@@ -1,5 +1,7 @@
 package com.mmm.parq.activities;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -11,6 +13,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.firebase.client.AuthData;
+import com.firebase.client.Firebase;
 import com.mmm.parq.R;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
@@ -24,6 +28,21 @@ public class DriverActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+
+        if (firebaseRef.getAuth() == null) {
+            redirectToLogin();
+        }
+
+        firebaseRef.addAuthStateListener(new Firebase.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(AuthData authData) {
+                if (authData == null) {
+                    redirectToLogin();
+                }
+            }
+        });
         setContentView(R.layout.activity_driver);
 
         // Set initial fragment as home fragment.
@@ -76,6 +95,12 @@ public class DriverActivity extends FragmentActivity {
         });
     }
 
+    private void redirectToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -83,7 +108,6 @@ public class DriverActivity extends FragmentActivity {
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 }

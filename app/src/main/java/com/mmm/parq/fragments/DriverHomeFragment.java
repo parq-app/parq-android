@@ -25,6 +25,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
@@ -239,8 +240,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String>  params = new HashMap<>();
+                Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
                 // TODO(kenzshelley) REPLACE THIS WITH TRUE USERID AFTER IMPLEMENTING LOGIN
-                params.put("userId", "2495cce6-0fa1-4a12-88d3-84a062832673");
+                params.put("userId", firebaseRef.getAuth().getUid());
                 params.put("latitude", String.valueOf(mLastLocation.getLatitude()));
                 params.put("longitude", String.valueOf(mLastLocation.getLongitude()));
                 return params;
