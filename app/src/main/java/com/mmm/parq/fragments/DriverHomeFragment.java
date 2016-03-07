@@ -2,10 +2,12 @@ package com.mmm.parq.fragments;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -32,6 +34,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -39,6 +42,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
 import com.mmm.parq.exceptions.RouteNotFoundException;
+import com.mmm.parq.layouts.OccupiedSpotCardView;
 import com.mmm.parq.layouts.ReservedSpotCardView;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
@@ -59,6 +63,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private Gson mGson;
     private RelativeLayout mRelativeLayout;
     private Spot mCurrentSpot;
+    private Polyline mDirectionsPath;
 
     static private int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -66,6 +71,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     static private int CARD_WIDTH = 380;
     static private int CARD_BOTTOM_MARGIN = 4;
     static private int LINE_WIDTH = 20;
+
+    static private int MAPS_REQUEST_CODE = 1;
 
     static private String CLASS = "DriverHomeFragment";
 
@@ -98,12 +105,25 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                     // TODO(kenzshelley) actually send an intent to navigate to the currently reserved spot.
                     if (mCurrentSpot == null) {
                         Log.d(CLASS, "No spot has been reserved!");
+                    } else {
+                        startNavigation();
                     }
                 }
             }
         });
 
         return view;
+    }
+
+    private void startNavigation() {
+        LatLong latLong = GeoHash.decodeHash(mCurrentSpot.getAttribute("geohash"));
+        String uriString = String.format(getString(R.string.nav_intent_uri),
+                latLong.getLat(), latLong.getLon());
+        Uri gmmIntentUri = Uri.parse(uriString);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage(getString(R.string.maps_package));
+
+        startActivityForResult(mapIntent, MAPS_REQUEST_CODE);
     }
 
     private void reserveSpot() {
@@ -204,7 +224,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
     // Send a request to create a reservation for the current user from the reservations endpoint.
     private void requestReservation(final HttpClient.VolleyCallback<String> callback) {
-        String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.reservations_endpint));
+        String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.reservations_endpoint));
         StringRequest reservationRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -267,7 +287,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
             mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
                     mLastLocation.getLongitude())));
-            mMap.addPolyline(polylineOptions);
+            mDirectionsPath = mMap.addPolyline(polylineOptions);
         } catch (RouteNotFoundException e) {
             Log.d(CLASS, "No route found: " + e.toString());
         }
@@ -326,5 +346,26 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         // Return false so that we don't consume the event and the default behavior still occurs
         // (the camera animates to the user's current position).
         return false;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode != MAPS_REQUEST_CODE) return;
+
+        mFindParkingButton.setText(getString(R.string.end_reservation));
+        // Removes the view at the 1st index in the layout (the spot card);
+        mRelativeLayout.removeViewAt(2);
+        mDirectionsPath.remove();
+
+        // Add the current reservation card
+        OccupiedSpotCardView occupiedSpotCardView = new OccupiedSpotCardView(getActivity(),
+                mCurrentSpot);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ConversionUtils.dpToPx(getActivity(), CARD_WIDTH),
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ABOVE, R.id.findparkingbutton);
+        params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        params.bottomMargin = ConversionUtils.dpToPx(getActivity(), CARD_BOTTOM_MARGIN);
+
+        mRelativeLayout.addView(occupiedSpotCardView, params);
     }
 }
