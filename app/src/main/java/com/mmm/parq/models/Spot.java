@@ -1,8 +1,9 @@
 package com.mmm.parq.models;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class Spot {
+public class Spot implements Serializable {
     private String id;
     private HashMap attributes;
 

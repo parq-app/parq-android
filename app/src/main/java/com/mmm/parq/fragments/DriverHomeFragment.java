@@ -44,6 +44,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.mmm.parq.R;
+import com.mmm.parq.activities.DriverActivity;
 
 import java.util.List;
 
@@ -52,6 +53,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private Location mLastLocation;
     private GoogleMap mMap;
     private Polyline mDirectionsPath;
+    private State mState;
     private OnLocationReceivedListener mCallback;
 
     static private final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -61,6 +63,10 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     static private final int ZOOM_LEVEL = 16;
 
     static private String CLASS = "DriverHomeFragment";
+
+    public enum State {
+        FIND_SPOT, NAVIGATION, OCCUPY_SPOT
+    }
 
     public interface OnLocationReceivedListener {
         void setLocation(Location location);
@@ -73,14 +79,19 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home_driver, container, false);
 
+        if (savedInstanceState != null) {
+            mState = (State) savedInstanceState.getSerializable("state");
+        } else {
+            mState = State.FIND_SPOT;
+        }
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        DriverFindSpotFragment driverFindSpotFragment = new DriverFindSpotFragment();
-        getChildFragmentManager().beginTransaction()
-                .add(R.id.driver_fragment_container, driverFindSpotFragment).commit();
+        // Set the initial overlay fragment based upon |mState|
+        setOverlayFragment();
 
         return view;
     }
@@ -128,7 +139,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
+        mState = State.OCCUPY_SPOT;
         fragmentTransaction.commit();
+        ((DriverActivity)getActivity()).shareLocation();
     }
 
     @Override
@@ -140,6 +153,34 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putSerializable("state", mState);
+    }
+
+    public void setOverlayFragment() {
+        Fragment fragment = null;
+        switch (mState) {
+            case FIND_SPOT:
+                fragment = new DriverFindSpotFragment();
+                break;
+            case NAVIGATION:
+                fragment = new DriverNavigationFragment();
+                break;
+            case OCCUPY_SPOT:
+                fragment = new DriverOccupiedSpotFragment();
+                break;
+        }
+
+        getChildFragmentManager().beginTransaction()
+                .add(R.id.driver_fragment_container, fragment).commit();
+    }
+
+    public void setState(State state) {
+        mState = state;
     }
 
     public void addPath(List<LatLng> path, LatLong latLong) {
@@ -173,6 +214,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public void removePath() {
         if (mDirectionsPath == null) {
             Log.d(CLASS, "No path to remove!");
+            return;
         }
         mDirectionsPath.remove();
     }

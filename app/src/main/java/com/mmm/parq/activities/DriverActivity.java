@@ -65,13 +65,24 @@ public class DriverActivity extends FragmentActivity implements
         setContentView(R.layout.activity_driver);
 
         // Set initial fragment as home fragment.
-        mFragment = new DriverHomeFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, mFragment)
-                .commit();
+        mFragment = fragmentManager.findFragmentById(R.id.container);
+        if (mFragment == null) {
+            mFragment = new DriverHomeFragment();
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, mFragment)
+                    .commit();
+        }
 
-        mSpot = null;
+        // Restore state
+        if (savedInstanceState != null) {
+            Log.d("tag", "Restoring!");
+            mSpot = (Spot) savedInstanceState.get("spot");
+            mReservation = (Reservation) savedInstanceState.get("reservation");
+        } else {
+            mSpot = null;
+        }
+
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
@@ -135,7 +146,7 @@ public class DriverActivity extends FragmentActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    // Fragment Callbacks
+    @Override
     public void drawPathToSpot(List<LatLng> path, LatLong spotLocation) {
         // Check that current fragment is instance of DriverHomeFragment
         try {
@@ -153,6 +164,34 @@ public class DriverActivity extends FragmentActivity implements
         }
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        // Save location information
+        if (mUserLocation != null) {
+            savedInstanceState.putDouble("lat", mUserLocation.getLatitude());
+            savedInstanceState.putDouble("lat", mUserLocation.getLongitude());
+        }
+
+        // Save current reservation if non-null
+        if (mReservation != null) {
+            savedInstanceState.putSerializable("reservation", mReservation);
+        }
+
+        // Save current spot if non-nul
+        if (mSpot != null) {
+            savedInstanceState.putSerializable("spot", mSpot);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        Log.d("DriverActivity", "in onDestroy!");
+    }
+
+    // Fragment Callbacks
     public void setSpot(Spot spot) {
         mSpot = spot;
     }
@@ -166,15 +205,15 @@ public class DriverActivity extends FragmentActivity implements
         shareLocation();
     }
 
-    private void shareLocation() {
+    // Shares the user's current location with the current overlay fragment.
+    public void shareLocation() {
         // Attempt to cast the fragment to a fragment that requires the current location.
         try {
             DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
             Fragment childFragment = driverHomeFrag.getChildFragmentManager().
                     findFragmentById(R.id.driver_fragment_container);
             ((NeedsLocation)childFragment).setLocation(mUserLocation);
-        } catch(ClassCastException e) {
-        }
+        } catch(ClassCastException e) {}
     }
 
     public Location getLocation() {
@@ -187,5 +226,12 @@ public class DriverActivity extends FragmentActivity implements
 
     public Reservation getReservation() {
         return mReservation;
+    }
+
+    public void setState(DriverHomeFragment.State state) {
+        try {
+            DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
+            driverHomeFrag.setState(state);
+        } catch(ClassCastException e) {}
     }
 }

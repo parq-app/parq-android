@@ -18,6 +18,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
+import com.mmm.parq.activities.DriverActivity;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.utils.HttpClient;
 import com.mmm.parq.utils.NeedsLocation;
@@ -32,7 +33,7 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
     private OnReservationCreatedListener mCallback;
     private RequestQueue mQueue;
 
-    private static final String CLASS = "DriverFindSpot";
+    private final String TAG = this.getTag();
 
     public interface OnReservationCreatedListener {
         void setReservation(Reservation reservation);
@@ -40,6 +41,7 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
 
     public DriverFindSpotFragment() {}
 
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_find_spot_driver, container, false);
@@ -55,6 +57,17 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
         });
 
         return view;
+    }
+
+    @Override
+    public void onAttach(Context activity) {
+        super.onAttach(activity);
+
+        try {
+            mCallback = (OnReservationCreatedListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement interface");
+        }
     }
 
     public void setLocation(Location location) {
@@ -73,12 +86,14 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
                 DriverNavigationFragment driverNavigationFragment = new DriverNavigationFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
                 fragmentTransaction.replace(R.id.driver_fragment_container, driverNavigationFragment);
+                ((DriverActivity) getActivity()).setState(DriverHomeFragment.State.NAVIGATION);
                 fragmentTransaction.commit();
+                ((DriverActivity)getActivity()).shareLocation();
             }
 
             @Override
             public void onError(VolleyError error) {
-                Log.d(CLASS + ":Error", error.toString());
+                Log.d(TAG + ":Error", error.toString());
             }
         });
     }
@@ -109,16 +124,5 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
         };
 
         mQueue.add(reservationRequest);
-    }
-
-    @Override
-    public void onAttach(Context activity) {
-        super.onAttach(activity);
-
-        try {
-            mCallback = (OnReservationCreatedListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement interface");
-        }
     }
 }
