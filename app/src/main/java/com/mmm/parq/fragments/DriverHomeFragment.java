@@ -1,10 +1,12 @@
 package com.mmm.parq.fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -14,9 +16,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
@@ -34,6 +38,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -286,10 +292,26 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             polylineOptions.width(LINE_WIDTH);
             polylineOptions.color(Color.BLUE);
 
-            mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
-            mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
+            // add start and end markers
+            Marker dest = mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
+            Marker start = mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
                     mLastLocation.getLongitude())));
             mDirectionsPath = mMap.addPolyline(polylineOptions);
+
+            // get the size of the screen
+            Activity activity = this.getActivity();
+            WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
+            Display display = wm.getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+
+            // make a lat long bounds and move the camera to it
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            builder.include(start.getPosition()).include(dest.getPosition());
+            LatLngBounds bounds = builder.build();
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 150);
+            mMap.setPadding(0, 0, 0, size.y / 2);
+            mMap.animateCamera(cameraUpdate);
         } catch (RouteNotFoundException e) {
             Log.d(CLASS, "No route found: " + e.toString());
         }
