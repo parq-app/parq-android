@@ -2,6 +2,7 @@ package com.mmm.parq.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.content.Intent;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -22,17 +24,14 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.mmm.parq.R;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -44,7 +43,6 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
-    private View mLoginFormView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +78,6 @@ public class LoginActivity extends AppCompatActivity {
                 attemptRegister();
             }
         });
-        mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
         mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
@@ -142,6 +139,9 @@ public class LoginActivity extends AppCompatActivity {
      */
     private boolean attemptSubmit(String email, String password) {
 
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(mPasswordView.getWindowToken(), 0);
+
         mEmailView.setError(null);
         mPasswordView.setError(null);
 
@@ -171,7 +171,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void setAuthenticatedUser(AuthData authData) {
+    private void startDriverActivity() {
         Intent intent = new Intent(this, DriverActivity.class);
         startActivity(intent);
     }
@@ -181,23 +181,25 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public void onAuthenticated(AuthData authData) {
             showProgress(false);
-            setAuthenticatedUser(authData);
+            startDriverActivity();
         }
 
         @Override
         public void onAuthenticationError(FirebaseError firebaseError) {
             showProgress(false);
             switch (firebaseError.getCode()) {
+                case FirebaseError.INVALID_EMAIL:
                 case FirebaseError.USER_DOES_NOT_EXIST:
+                    mEmailView.setError(getString(R.string.error_invalid_email));
+                    mEmailView.requestFocus();
                     break;
                 case FirebaseError.INVALID_PASSWORD:
-                    break;
-                case FirebaseError.EMAIL_TAKEN:
+                    mPasswordView.setError(getString(R.string.error_incorrect_password));
+                    mPasswordView.requestFocus();
                     break;
                 default:
                     Log.e(TAG, "Unrecognized auth error: " + firebaseError.toString());
             }
-            setAuthenticatedUser(null);
         }
     }
 
@@ -208,14 +210,14 @@ public class LoginActivity extends AppCompatActivity {
 
         int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            }
-        });
+        //mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        //mLoginFormView.animate().setDuration(shortAnimTime).alpha(
+        //        show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+        //    @Override
+        //    public void onAnimationEnd(Animator animation) {
+        //        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        //    }
+        //});
 
         mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
         mProgressView.animate().setDuration(shortAnimTime).alpha(
