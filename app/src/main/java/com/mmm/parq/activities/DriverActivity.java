@@ -59,7 +59,6 @@ public class DriverActivity extends FragmentActivity {
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
-                Log.d("Driver", "dafuq");
                 Snackbar.make(mDrawerLayout, menuItem.getTitle() + " pressed", Snackbar.LENGTH_LONG).show();
 
                 // Check new item & uncheck old one.

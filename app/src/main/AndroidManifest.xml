@@ -32,7 +32,8 @@
 
         <activity
             android:name=".activities.DriverActivity"
-            android:label="@string/title_activity_driver"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher_parq"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -42,13 +43,11 @@
         </activity>
         <activity
             android:name=".activities.LoginActivity"
-            android:label="@string/title_activity_login"
             android:noHistory="true"
             android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".activities.HostActivity"
-            android:label="@string/title_activity_host"
             android:screenOrientation="portrait">
         </activity>
     </application>
