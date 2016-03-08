@@ -1,6 +1,5 @@
 package com.mmm.parq.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -20,8 +19,6 @@ import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
-
-import java.sql.Driver;
 
 public class DriverActivity extends FragmentActivity {
     private DrawerLayout mDrawerLayout;
