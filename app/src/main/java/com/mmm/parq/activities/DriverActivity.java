@@ -1,6 +1,5 @@
 package com.mmm.parq.activities;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -24,6 +23,7 @@ import com.mmm.parq.fragments.DriverSettingsFragment;
 public class DriverActivity extends FragmentActivity {
     private DrawerLayout mDrawerLayout;
     private MenuItem mPreviousItem;
+    private MenuItem mHostItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +71,7 @@ public class DriverActivity extends FragmentActivity {
                 // Display the fragment corresponding to this menu item.
                 Fragment fragment = null;
                 FragmentManager fragmentManager = getSupportFragmentManager();
-                switch(menuItem.getItemId()) {
+                switch (menuItem.getItemId()) {
                     case R.id.drawer_home:
                         fragment = new DriverHomeFragment();
                         break;
@@ -93,6 +93,23 @@ public class DriverActivity extends FragmentActivity {
                 return true;
             }
         });
+
+        // separate listener to allow us to start the host activity
+        view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+                Snackbar.make(mDrawerLayout, menuItem.getTitle() + " pressed", Snackbar.LENGTH_LONG).show();
+
+                switch (menuItem.getItemId()) {
+                    case R.id.drawer_host:
+                        Intent i = new Intent(DriverActivity.this, HostActivity.class);
+                        startActivity(i);
+                }
+                return true;
+            }
+        });
+
+
     }
 
     private void redirectToLogin() {
