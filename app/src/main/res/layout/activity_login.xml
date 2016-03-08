@@ -3,13 +3,24 @@
               android:id="@+id/login_layout"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:gravity="center_horizontal"
               android:orientation="vertical"
+              android:gravity="center_horizontal"
               android:paddingBottom="@dimen/activity_vertical_margin"
               android:paddingLeft="@dimen/activity_horizontal_margin"
               android:paddingRight="@dimen/activity_horizontal_margin"
               android:paddingTop="@dimen/activity_vertical_margin"
               tools:context="com.mmm.parq.activities.LoginActivity">
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="16dp"
+        android:src="@drawable/company_icon"
+        android:textSize="16dp"
+        android:layout_marginBottom="4dp"/>
+
+    <ImageView
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@drawable/logo"/>
 
     <!-- Login progress -->
     <ProgressBar
@@ -17,6 +28,7 @@
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:layout_marginBottom="8dp"
         android:visibility="gone"/>
 
@@ -29,6 +41,7 @@
             android:id="@+id/email_login_form"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:orientation="vertical">
 
             <android.support.design.widget.TextInputLayout
@@ -64,24 +77,36 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <Button
-                android:id="@+id/email_sign_in_button"
-                style="?android:textAppearanceSmall"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/action_sign_in"
-                android:textStyle="bold"/>
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/email_register_button"
-                style="?android:textAppearanceSmall"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/action_register"
-                android:textStyle="bold"/>
+                <Button
+                    android:id="@+id/email_sign_in_button"
+                    style="@style/Widget.AppCompat.ActionButton"
+                    android:background="@drawable/rounded_button"
+                    android:textColor="@android:color/white"
+                    android:layout_width="0dp"
+                    android:layout_weight=".50"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:text="@string/action_sign_in"
+                    android:textStyle="bold"/>
 
+                <Button
+                    android:id="@+id/email_register_button"
+                    style="@style/Widget.AppCompat.ActionButton"
+                    android:background="@drawable/rounded_button"
+                    android:textColor="@android:color/white"
+                    android:layout_width="0dp"
+                    android:layout_weight=".50"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:text="@string/action_register"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
