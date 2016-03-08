@@ -15,4 +15,8 @@ public class Reservation implements Serializable {
     public String getAttribute(String key)  {
         return attributes.get(key).toString();
     }
+
+    public String getId() {
+       return id;
+    }
 }

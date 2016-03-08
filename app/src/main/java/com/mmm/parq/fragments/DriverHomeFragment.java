@@ -141,7 +141,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
         mState = State.OCCUPY_SPOT;
         fragmentTransaction.commit();
-        ((DriverActivity)getActivity()).shareLocation();
     }
 
     @Override
