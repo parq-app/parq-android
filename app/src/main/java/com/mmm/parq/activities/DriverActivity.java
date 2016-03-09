@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.util.Log;
 import android.view.MenuItem;
 
 import com.firebase.client.AuthData;
@@ -83,32 +82,21 @@ public class DriverActivity extends FragmentActivity {
                     case R.id.drawer_settings:
                         fragment = new DriverSettingsFragment();
                         break;
+                    case R.id.drawer_host:
+                        Intent i = new Intent(DriverActivity.this, HostActivity.class);
+                        startActivity(i);
                 }
-                fragmentManager.beginTransaction()
-                        .replace(R.id.container, fragment)
-                        .commit();
+
+                if (fragment != null) {
+                    fragmentManager.beginTransaction()
+                            .replace(R.id.container, fragment)
+                            .commit();
+                }
                 mDrawerLayout.closeDrawers();
                 mPreviousItem = menuItem;
                 return true;
             }
         });
-
-        // separate listener to allow us to start the host activity
-        view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(MenuItem menuItem) {
-                Snackbar.make(mDrawerLayout, menuItem.getTitle() + " pressed", Snackbar.LENGTH_LONG).show();
-
-                switch (menuItem.getItemId()) {
-                    case R.id.drawer_host:
-                        Intent i = new Intent(DriverActivity.this, HostActivity.class);
-                        startActivity(i);
-                }
-                return true;
-            }
-        });
-
-
     }
 
     private void redirectToLogin() {
