@@ -50,6 +50,10 @@
             android:name=".activities.HostActivity"
             android:screenOrientation="portrait">
         </activity>
+        <activity
+            android:name=".activities.HostNewSpotActivity"
+            android:label="@string/title_activity_host_new_spot">
+        </activity>
     </application>
 
 </manifest>

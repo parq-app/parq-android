@@ -47,3 +47,6 @@ android {
         exclude 'META-INF/NOTICE'
     }
 }
+dependencies {
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
+}
