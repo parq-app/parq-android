@@ -1,5 +1,6 @@
 package com.mmm.parq.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -21,6 +22,8 @@ public class HostActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "This will add a new spot!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                Intent i = new Intent(getApplicationContext(), HostNewSpotActivity.class);
+                startActivity(i);
             }
         });
     }
