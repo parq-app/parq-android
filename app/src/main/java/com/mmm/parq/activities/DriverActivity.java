@@ -18,6 +18,7 @@ import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.model.LatLng;
 import com.mmm.parq.R;
+import com.mmm.parq.fragments.DriverEndReservationFragment;
 import com.mmm.parq.fragments.DriverFindSpotFragment;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
@@ -35,7 +36,8 @@ public class DriverActivity extends FragmentActivity implements
         DriverNavigationFragment.OnDirectionsRequestedListener,
         DriverOccupiedSpotFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
-        DriverFindSpotFragment.OnReservationCreatedListener {
+        DriverFindSpotFragment.OnReservationCreatedListener,
+        DriverEndReservationFragment.OnChangeFragmentListener {
     private DrawerLayout mDrawerLayout;
     private Fragment mFragment;
     private MenuItem mPreviousItem;
@@ -217,6 +219,10 @@ public class DriverActivity extends FragmentActivity implements
 
     public Reservation getReservation() {
         return mReservation;
+    }
+
+    public void setFragment(Fragment fragment) {
+        mFragment = fragment;
     }
 
     public void setState(DriverHomeFragment.State state) {

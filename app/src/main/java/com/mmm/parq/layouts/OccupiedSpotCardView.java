@@ -20,7 +20,7 @@ public class OccupiedSpotCardView extends CardView {
     private TextView mNetCostText;
     private TextView mAddr;
     private int mTimeElapsed;
-    private int mNetCost;
+    private Double mNetCost;
 
     private static int ONE_MINUTE = 60000;
 
@@ -32,7 +32,7 @@ public class OccupiedSpotCardView extends CardView {
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.occupied_spot_card, null);
         mTimeElapsed = 0;
-        mNetCost = 0;
+        mNetCost = 0.0;
 
         mTimeElapsedText = (TextView) view.findViewById(R.id.time_elapsed);
         mNetCostText = (TextView) view.findViewById(R.id.net_cost);
@@ -49,7 +49,7 @@ public class OccupiedSpotCardView extends CardView {
                     @Override
                     public void run() {
                         mTimeElapsedText.setText(intToTimeString(mTimeElapsed));
-                        mNetCostText.setText(String.format(activity.getString(R.string.cost), mNetCost));
+                        mNetCostText.setText(String.format("$%.2f", mNetCost));
                         mTimeElapsed += 1;
                         mNetCost += rate / 60.0;
                     }
@@ -59,6 +59,11 @@ public class OccupiedSpotCardView extends CardView {
         mTimer.schedule(timerTask, 0, ONE_MINUTE);
 
         addView(view);
+    }
+
+    // TODO(kenzshelley) Remove this once Reservations include cost themselves.
+    public double getCurrentCost() {
+        return mNetCost;
     }
 
     private String intToTimeString(int timeInMinutes) {

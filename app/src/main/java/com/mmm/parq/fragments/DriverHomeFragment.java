@@ -21,8 +21,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.RelativeLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -54,8 +52,6 @@ import com.mmm.parq.utils.NeedsLocation;
 
 import org.json.JSONObject;
 
-import java.sql.Driver;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -83,7 +79,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private static String CLASS = "DriverHomeFragment";
 
     public enum State {
-        FIND_SPOT, NAVIGATION, OCCUPY_SPOT
+        FIND_SPOT, NAVIGATION, OCCUPY_SPOT, END_RESERVATION
     }
 
     public interface OnLocationReceivedListener {
@@ -196,6 +192,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
         mState = State.OCCUPY_SPOT;
+        fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
 
@@ -231,10 +228,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 args.putBoolean("occupied", true);
                 fragment.setArguments(args);
                 break;
+            case END_RESERVATION:
+                fragment = new DriverEndReservationFragment();
+                break;
         }
-
-        getChildFragmentManager().beginTransaction()
-                .add(R.id.driver_fragment_container, fragment).commit();
+        getChildFragmentManager().beginTransaction().add(R.id.driver_fragment_container, fragment).commit();
     }
 
     public void setLocation(Location location) {
