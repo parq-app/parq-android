@@ -159,6 +159,7 @@ public class DriverActivity extends FragmentActivity implements
     public void clearMap() {
         try {
             ( (DriverHomeFragment) mFragment).removePath();
+            ( (DriverHomeFragment) mFragment).removeStartMarker();
         } catch (ClassCastException e) {
             Log.d("DriverActivity", "Invalid Fragment");
         }

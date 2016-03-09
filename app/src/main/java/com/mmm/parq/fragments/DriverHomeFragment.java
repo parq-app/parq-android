@@ -30,12 +30,14 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
+import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -52,6 +54,7 @@ import com.mmm.parq.utils.NeedsLocation;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -64,6 +67,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private CountDownLatch stateSetLatch = new CountDownLatch(1);
     private Location mLastLocation;
     private GoogleMap mMap;
+    private Marker mDestMarker;
+    private Marker mStartMarker;
     private Polyline mDirectionsPath;
     private RequestQueue mQueue;
     private State mState;
@@ -250,11 +255,34 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         polylineOptions.color(Color.BLUE);
 
         // add start and end markers
-        Marker dest = mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
-        Marker start = mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
+        mDestMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
+        mStartMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(),
                 mLastLocation.getLongitude())));
         mDirectionsPath = mMap.addPolyline(polylineOptions);
 
+        List<Marker> markers = new ArrayList<>();
+        markers.add(mStartMarker);
+        markers.add(mDestMarker);
+        zoomCameraToMarkers(markers);
+    }
+
+    public void removePath() {
+        if (mDirectionsPath == null) {
+            Log.w(CLASS, "No path to remove!");
+            return;
+        }
+        mDirectionsPath.remove();
+    }
+
+    public void removeStartMarker() {
+        if (mStartMarker == null) {
+            Log.w(TAG, "No start marker!");
+            return;
+        }
+        zoomCameraToMarker(mDestMarker);
+    }
+
+    private void zoomCameraToMarkers(List<Marker> markers) {
         // get the size of the screen
         Activity activity = this.getActivity();
         WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
@@ -264,19 +292,22 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
         // make a lat long bounds and move the camera to it
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        builder.include(start.getPosition()).include(dest.getPosition());
+
+        for (Marker marker : markers) {
+           builder.include(marker.getPosition());
+        }
         LatLngBounds bounds = builder.build();
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 150);
         mMap.setPadding(0, 0, 0, size.y / 2);
         mMap.animateCamera(cameraUpdate);
     }
 
-    public void removePath() {
-        if (mDirectionsPath == null) {
-            Log.d(CLASS, "No path to remove!");
-            return;
-        }
-        mDirectionsPath.remove();
+    private void zoomCameraToMarker(Marker marker) {
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(marker.getPosition())
+                .zoom(15)
+                .build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
     /*
@@ -338,6 +369,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 Gson gson = new Gson();
                 Spot spot = gson.fromJson(response, Spot.class);
                 mCallback.setSpot(spot);
+
+                // Add the spot's location to the map
+                LatLong latLng = GeoHash.decodeHash(spot.getAttribute("geohash"));
+                mDestMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(latLng.getLat(), latLng.getLon())));
+                zoomCameraToMarker(mDestMarker);
 
                 // Everything needed to initialize the OccupySpotFragment is initialized now.
                 stateSetLatch.countDown();
