@@ -40,6 +40,11 @@ public class HostActivity extends AppCompatActivity {
                 startActivity(i);
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
         RequestQueue queue = Volley.newRequestQueue(this);
