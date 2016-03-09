@@ -84,6 +84,7 @@ public class DriverActivity extends FragmentActivity implements
             mSpot = null;
         }
 
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
 
