@@ -12,6 +12,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
@@ -83,7 +84,6 @@ public class DriverActivity extends FragmentActivity implements
             mSpot = null;
         }
 
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
 
