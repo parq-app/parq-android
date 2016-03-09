@@ -34,8 +34,6 @@ public class HostActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "This will add a new spot!", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
                 Intent i = new Intent(getApplicationContext(), HostNewSpotActivity.class);
                 startActivity(i);
             }
