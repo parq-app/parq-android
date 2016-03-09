@@ -39,7 +39,6 @@ public class DriverActivity extends FragmentActivity implements
     private DrawerLayout mDrawerLayout;
     private Fragment mFragment;
     private MenuItem mPreviousItem;
-    private MenuItem mHostItem;
     private Reservation mReservation;
     private Spot mSpot;
     private Location mUserLocation;

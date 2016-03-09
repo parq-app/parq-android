@@ -54,7 +54,9 @@ import com.mmm.parq.utils.NeedsLocation;
 
 import org.json.JSONObject;
 
+import java.sql.Driver;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -87,6 +89,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public interface OnLocationReceivedListener {
         void setLocation(Location location);
         void setReservation(Reservation reservation);
+        Reservation getReservation();
         void setSpot(Spot spot);
     }
 
@@ -126,8 +129,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         // Watch for when the reservation is initialized and notify people who care
         Thread reservationInitializedThread = new Thread() {
             public void run() {
-                while ((getActivity()) == null ||
-                        ((DriverActivity)getActivity()).getReservation() == null) {
+                while (mCallback.getReservation() == null) {
                    // do nothing
                 }
                 reservationSetLatch.countDown();
@@ -411,7 +413,14 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 try {
                     // If the user has an active reservation.
                     if (response.getJSONObject("attributes").has("activeDriverReservations")) {
-                        String reservationId = response.getJSONObject("attributes").getString("activeDriverReservations");
+                        JSONObject activeReservations = response.getJSONObject("attributes").getJSONObject("activeDriverReservations");
+                        Iterator<String> resKeys = activeReservations.keys();
+                        String reservationId = null;
+                        if (resKeys.hasNext()) {
+                            JSONObject resObj = activeReservations.getJSONObject(resKeys.next());
+                            reservationId = resObj.getString("reservationId");
+                        }
+
                         mState = State.OCCUPY_SPOT;
 
                         // Get the reservation and set it as the activity's current reservation.
