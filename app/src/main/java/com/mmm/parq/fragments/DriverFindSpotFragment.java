@@ -16,6 +16,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.firebase.client.Firebase;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
@@ -33,7 +34,7 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
     private OnReservationCreatedListener mCallback;
     private RequestQueue mQueue;
 
-    private final String TAG = this.getTag();
+    private final String TAG = DriverFindSpotFragment.class.getSimpleName();
 
     public interface OnReservationCreatedListener {
         void setReservation(Reservation reservation);
@@ -88,7 +89,7 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
                 fragmentTransaction.replace(R.id.driver_fragment_container, driverNavigationFragment);
                 ((DriverActivity) getActivity()).setState(DriverHomeFragment.State.NAVIGATION);
                 fragmentTransaction.commit();
-                ((DriverActivity)getActivity()).shareLocation();
+                ((DriverActivity) getActivity()).shareLocation();
             }
 
             @Override
@@ -115,8 +116,8 @@ public class DriverFindSpotFragment extends Fragment implements NeedsLocation {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String>  params = new HashMap<>();
-                // TODO(kenzshelley) REPLACE THIS WITH TRUE USERID AFTER IMPLEMENTING LOGIN
-                params.put("userId", "2495cce6-0fa1-4a12-88d3-84a062832673");
+                Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+                params.put("userId", firebaseRef.getAuth().getUid());
                 params.put("latitude", String.valueOf(mLocation.getLatitude()));
                 params.put("longitude", String.valueOf(mLocation.getLongitude()));
                 return params;

@@ -3,6 +3,7 @@ package com.mmm.parq.layouts;
 import android.app.Activity;
 import android.content.Context;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -25,7 +26,7 @@ public class OccupiedSpotCardView extends CardView {
 
     public OccupiedSpotCardView(final Activity activity, Spot spot) {
         super(activity);
-        final int rate = Integer.parseInt(spot.getAttribute("costPerHour"));
+        final double rate = Double.parseDouble(spot.getAttribute("costPerHour"));
         String addr = spot.getAttribute("addr");
 
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -50,7 +51,7 @@ public class OccupiedSpotCardView extends CardView {
                         mTimeElapsedText.setText(intToTimeString(mTimeElapsed));
                         mNetCostText.setText(String.format(activity.getString(R.string.cost), mNetCost));
                         mTimeElapsed += 1;
-                        mNetCost += rate;
+                        mNetCost += rate / 60.0;
                     }
                 });
             }

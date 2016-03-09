@@ -13,7 +13,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.mmm.parq.R;
 import com.mmm.parq.layouts.OccupiedSpotCardView;
@@ -21,9 +20,6 @@ import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class DriverOccupiedSpotFragment extends Fragment {
     private OnNavigationCompletedListener mCallback;
@@ -33,6 +29,8 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
     static private int CARD_WIDTH = 380;
     static private int CARD_BOTTOM_MARGIN = 4;
+
+    static private String TAG = DriverOccupiedSpotFragment.class.getSimpleName();
 
     public interface OnNavigationCompletedListener {
         void clearMap();
@@ -56,7 +54,14 @@ public class DriverOccupiedSpotFragment extends Fragment {
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.occupied_layout);
 
         // Occupy the spot
-        occupyReservation();
+        if (this.getArguments() != null) {
+            boolean alreadyOccupied = this.getArguments().getBoolean("occupied");
+            if (!alreadyOccupied) {
+                occupyReservation();
+            }
+        } else {
+            occupyReservation();
+        }
 
         // Clear the map
         mCallback.clearMap();

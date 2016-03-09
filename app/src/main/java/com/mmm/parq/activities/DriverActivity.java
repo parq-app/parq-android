@@ -76,7 +76,6 @@ public class DriverActivity extends FragmentActivity implements
 
         // Restore state
         if (savedInstanceState != null) {
-            Log.d("tag", "Restoring!");
             mSpot = (Spot) savedInstanceState.get("spot");
             mReservation = (Reservation) savedInstanceState.get("reservation");
         } else {
@@ -182,13 +181,6 @@ public class DriverActivity extends FragmentActivity implements
         if (mSpot != null) {
             savedInstanceState.putSerializable("spot", mSpot);
         }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        Log.d("DriverActivity", "in onDestroy!");
     }
 
     // Fragment Callbacks
