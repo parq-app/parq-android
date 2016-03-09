@@ -1,28 +1,40 @@
 <resources>
+    <!-- Strings for app/activity names -->
     <string name="app_name">parq</string>
     <string name="title_activity_driver">Map</string>
+    <string name="title_activity_host">Host</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Nav drawer strings -->
     <string name="home">Home</string>
     <string name="payment">Payment</string>
     <string name="history">History</string>
     <string name="settings">Settings</string>
     <string name="host">Host</string>
-    <string name="find_spot_button_text">Find Spot</string>
-    <string name="navigate_text">Navigate to spot</string>
-    <string name="end_reservation">Leave spot</string>
-    <string name="end_transaction_text"></string>
+
+    <!--  Request Strings -->
     <string name="api_address">http://162.243.244.79</string>
     <string name="reservations_endpoint">reservations</string>
     <string name="spots_endpoint">spots</string>
     <string name="google_directions_endpoint">https://maps.googleapis.com/maps/api/directions/json</string>
     <string name="firebase_endpoint">https://parq.firebaseio.com</string>
+
+    <!-- Driver Button Strings -->
+    <string name="find_spot_button_text">Find Spot</string>
+    <string name="navigate_text">Navigate to spot</string>
+    <string name="end_reservation">Leave spot</string>
+
+
+    <!-- Misc -->
+    <string name="end_transaction_text"></string>
     <string name="no_ratings">No ratings</string>
     <string name="nav_intent_uri">google.navigation:q=%1$s,%2$s</string>
     <string name="maps_package">com.google.android.apps.maps</string>
-    <string name="cost">$%1$d</string>
+    <string name="cost">$%1$2f</string>
     <string name="time_parked">Time parked</string>
     <string name="net_cost">Net cost</string>
-    <string name="title_activity_host">Host</string>
-    <string name="title_activity_login">Sign in</string>
+    <string name="prompt_comment">Comment</string>
+    <string name="submit">Submit</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

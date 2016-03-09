@@ -13,7 +13,7 @@
             android:id="@+id/spot_image"
             android:layout_width="380dp"
             android:layout_height="90dp"
-            android:src="@drawable/temp_spot" />
+            android:src="@drawable/pretty_spot_380_90" />
         <TextView
             android:id="@+id/addr"
             android:layout_width="wrap_content"

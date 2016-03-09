@@ -14,7 +14,7 @@
             android:id="@+id/spot_image"
             android:layout_width="380dp"
             android:layout_height="90dp"
-            android:src="@drawable/temp_spot"
+            android:src="@drawable/pretty_spot_380_90"
             />
         <RelativeLayout
             android:id="@+id/addr_and_time"

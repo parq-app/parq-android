@@ -33,19 +33,20 @@ public class ReservedSpotCardView extends CardView {
        LinearLayout linearLayout = (LinearLayout) view.findViewById(R.id.rating);
 
        // Create rating stars & append based on spot rating
-       int rating = Integer.parseInt(spot.getAttribute("rating"));
+       double rating = Double.parseDouble(spot.getAttribute("rating"));
        TextView ratingText = (TextView) view.findViewById(R.id.rating_number);
 
        // Display something saying that the spot hasn't had a driver yet
        if (rating == 0) {
            ratingText.setText(getResources().getString(R.string.no_ratings));
        } else {
-           for (int i = 0; i < rating; ++i) {
+           long numStars = Math.round(rating);
+           for (int i = 0; i < numStars; ++i) {
                ImageView star = new ImageView(context);
                star.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.star));
                linearLayout.addView(star);
            }
-           ratingText.setText(String.format("(%d)", rating));
+           ratingText.setText(String.format("(%.2f)", rating));
        }
 
        addView(view);
