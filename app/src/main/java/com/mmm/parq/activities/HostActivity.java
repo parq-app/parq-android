@@ -25,6 +25,8 @@ public class HostActivity extends AppCompatActivity {
     private GridView mHostSpotsList;
     private JSONArray mSpotsArray;
 
+    private final static String TAG = HostActivity.class.getSimpleName();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +59,7 @@ public class HostActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.d("HOST", "There was an error getting the users spots: " +  error);
+                Log.e(TAG, "There was an error getting the users spots: " +  error);
             }
         });
         queue.add(jsonArrayRequest);

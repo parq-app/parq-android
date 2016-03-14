@@ -35,8 +35,6 @@ public class DriverEndReservationFragment extends Fragment {
     private TextView mAddress;
     private TextView mCost;
 
-
-
     public interface OnChangeFragmentListener {
         void setFragment(Fragment fragment);
     }

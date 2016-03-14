@@ -1,4 +1,4 @@
-package com.mmm.parq.utils;
+package com.mmm.parq.interfaces;
 
 import android.location.Location;
 

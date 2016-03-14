@@ -8,55 +8,74 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.MenuItem;
-import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.RequestFuture;
+import com.android.volley.toolbox.StringRequest;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
 import com.mmm.parq.fragments.DriverEndReservationFragment;
-import com.mmm.parq.fragments.DriverFindSpotFragment;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
 import com.mmm.parq.fragments.DriverNavigationFragment;
 import com.mmm.parq.fragments.DriverOccupiedSpotFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
+import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
-import com.mmm.parq.utils.NeedsLocation;
+import com.mmm.parq.utils.HttpClient;
+import com.mmm.parq.interfaces.NeedsLocation;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 public class DriverActivity extends FragmentActivity implements
+        HasLocation,
         DriverNavigationFragment.OnDirectionsRequestedListener,
         DriverOccupiedSpotFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
-        DriverFindSpotFragment.OnReservationCreatedListener,
         DriverEndReservationFragment.OnChangeFragmentListener {
     private DrawerLayout mDrawerLayout;
+    private Firebase mFirebaseRef;
     private Fragment mFragment;
     private MenuItem mPreviousItem;
+    private RequestQueue mQueue;
     private Reservation mReservation;
     private Spot mSpot;
     private Location mUserLocation;
+
+    private final static String TAG = DriverActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+        mQueue = HttpClient.getInstance(getApplicationContext()).getRequestQueue();
+        mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
 
-        if (firebaseRef.getAuth() == null) {
+        if (mFirebaseRef.getAuth() == null) {
             redirectToLogin();
         }
 
-        firebaseRef.addAuthStateListener(new Firebase.AuthStateListener() {
+        mFirebaseRef.addAuthStateListener(new Firebase.AuthStateListener() {
             @Override
             public void onAuthStateChanged(AuthData authData) {
                 if (authData == null) {
@@ -131,12 +150,6 @@ public class DriverActivity extends FragmentActivity implements
         });
     }
 
-    private void redirectToLogin() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -147,24 +160,6 @@ public class DriverActivity extends FragmentActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void drawPathToSpot(List<LatLng> path, LatLong spotLocation) {
-        // Check that current fragment is instance of DriverHomeFragment
-        try {
-            ( (DriverHomeFragment) mFragment).addPath(path, spotLocation);
-        } catch (ClassCastException e) {
-            Log.d("DriverActivity", "Invalid Fragment");
-        }
-    }
-
-    public void clearMap() {
-        try {
-            ( (DriverHomeFragment) mFragment).removePath();
-            ( (DriverHomeFragment) mFragment).removeStartMarker();
-        } catch (ClassCastException e) {
-            Log.d("DriverActivity", "Invalid Fragment");
-        }
-    }
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -186,51 +181,221 @@ public class DriverActivity extends FragmentActivity implements
         }
     }
 
-    // Fragment Callbacks
-    public void setSpot(Spot spot) {
-        mSpot = spot;
+    // Interfaces
+
+    // Implementing OnNavigationCompletedListener Interface
+    @Override
+    public void showEndReservationFragment(double cost) {
+            DriverEndReservationFragment driverEndReservationFragment = new DriverEndReservationFragment();
+            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+            // TODO(kenzshelley) Remove this once Reservations include cost themselves.
+            Bundle args = new Bundle();
+            args.putDouble("cost", cost);
+            driverEndReservationFragment.setArguments(args);
+
+            fragmentTransaction.replace(R.id.container, driverEndReservationFragment);
+            setState(DriverHomeFragment.State.END_RESERVATION);
+            fragmentTransaction.commit();
     }
 
-    public Spot getSpot() {
-        return mSpot;
+    // Implementing OnChangeFragmentListener Interface
+    @Override
+    public void setFragment(Fragment fragment) {
+        mFragment = fragment;
     }
 
+    // Implementing MapController Interface
+    @Override
+    public void drawPathToSpot(List<LatLng> path, LatLong spotLocation) {
+        // Check that current fragment is instance of DriverHomeFragment
+        try {
+            ( (DriverHomeFragment) mFragment).addPath(path, spotLocation);
+        } catch (ClassCastException e) {
+            Log.d("DriverActivity", "Invalid Fragment");
+        }
+    }
+
+    @Override
+    public void clearMap() {
+        try {
+            ( (DriverHomeFragment) mFragment).removePath();
+            ( (DriverHomeFragment) mFragment).removeStartMarker();
+        } catch (ClassCastException e) {
+            Log.d("DriverActivity", "Invalid Fragment");
+        }
+    }
+
+    @Override
+    public void addDestinationMarker(LatLong latLong) {
+        ((DriverHomeFragment) mFragment).addDestinationMarker(latLong);
+    }
+
+    @Override
+    public void zoomCameraToDestinationMarker() {
+        ((DriverHomeFragment) mFragment).zoomCameraToDestinationMarker();
+    }
+
+    // Implementing HasLocation Interface
+    @Override
     public void setLocation(Location location) {
         mUserLocation = location;
         shareLocation();
     }
 
-    // Shares the user's current location with the current overlay fragment.
-    public void shareLocation() {
-        // Attempt to cast the fragment to a fragment that requires the current location.
-        try {
-            DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
-            Fragment childFragment = driverHomeFrag.getChildFragmentManager().
-                    findFragmentById(R.id.driver_fragment_container);
-            ((NeedsLocation)childFragment).setLocation(mUserLocation);
-        } catch(ClassCastException e) {}
-    }
-
+    @Override
     public Location getLocation() {
         return mUserLocation;
-    }
-
-    public void setReservation(Reservation reservation) {
-        mReservation = reservation;
-    }
-
-    public Reservation getReservation() {
-        return mReservation;
-    }
-
-    public void setFragment(Fragment fragment) {
-        mFragment = fragment;
     }
 
     public void setState(DriverHomeFragment.State state) {
         try {
             DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
             driverHomeFrag.setState(state);
+        } catch(ClassCastException e) {}
+    }
+
+    // Implementing HasReservation Interface
+    @Override
+    public FutureTask<Reservation> getReservation(String reservationId) {
+        FutureTask<Reservation> ft = new FutureTask<Reservation>(new GetReservation(reservationId));
+        ft.run();
+        return ft;
+    }
+
+    private class GetReservation implements Callable<Reservation> {
+        private String mReservationId;
+
+        public GetReservation(String reservationId) { mReservationId = reservationId; }
+
+        public Reservation call() {
+            if (mReservation != null) {
+                return mReservation;
+            }
+
+            Future<String> reservationFuture = requestReservation(mReservationId);
+            try {
+                mReservation = parseReservationResponse(reservationFuture.get());
+            } catch (Exception e) {
+                Log.w(TAG, e.toString());
+            }
+
+            return mReservation;
+        }
+    }
+
+    // Implementing HasSpot Interface
+    @Override
+    public FutureTask<Spot> getSpot(String spotId) {
+        FutureTask<Spot> ft = new FutureTask<Spot>(new GetSpot(spotId));
+        ft.run();
+        return ft;
+    }
+
+    private class GetSpot implements Callable<Spot> {
+        private String mSpotId;
+
+        public GetSpot(String spotId) { mSpotId = spotId; }
+
+        public Spot call() {
+            if (mSpot != null) {
+                return mSpot;
+            }
+
+            Future<String> spotFuture = requestSpot(mSpotId);
+            try {
+                mSpot = parseSpotResponse(spotFuture.get());
+            } catch (Exception e) {
+                Log.w(TAG, e.toString());
+            }
+
+            return mSpot;
+        }
+    }
+
+    // TODO(kenzshelley) Remove this as soon as DriverEndReservationFragment handles resumptions properly.
+    public Spot getSpot() {
+        return mSpot;
+    }
+
+    // Private helper methods
+    private Future<String> requestSpot(String spotId) {
+        RequestFuture<String> future = RequestFuture.newFuture();
+        String url = String.format("%s/%s/%s", getString(R.string.api_address),
+                getString(R.string.spots_endpoint), spotId);
+        StringRequest spotRequest = new StringRequest(Request.Method.GET, url, future, future);
+        mQueue.add(spotRequest);
+
+        return future;
+    }
+
+    private Future<String> requestReservation(String reservationId) {
+        // If reservationId is not null, retrieve the existing reservation.
+        if (reservationId != null) {
+            return requestReservationGet(reservationId);
+        // Create a new reservation.
+        } else {
+            return requestReservationPost();
+        }
+    }
+
+    private Future<String> requestReservationPost() {
+        // Do something to ensure that location is set
+        RequestFuture<String> future = RequestFuture.newFuture();
+        String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.reservations_endpoint));
+        StringRequest reservationRequest = new StringRequest(Request.Method.POST, url, future, future) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String>  params = new HashMap<>();
+                params.put("userId", mFirebaseRef.getAuth().getUid());
+                params.put("latitude", String.valueOf(mUserLocation.getLatitude()));
+                params.put("longitude", String.valueOf(mUserLocation.getLongitude()));
+                return params;
+            }
+        };
+        mQueue.add(reservationRequest);
+
+        return future;
+    }
+
+    private Future<String> requestReservationGet(String reservationId) {
+        RequestFuture<String> future = RequestFuture.newFuture();
+        String url = String.format("%s/%s/%s", getString(R.string.api_address),
+                getString(R.string.reservations_endpoint), reservationId);
+        StringRequest reservationRequest = new StringRequest(Request.Method.GET, url, future, future);
+        mQueue.add(reservationRequest);
+
+        return future;
+    }
+
+    private Reservation parseReservationResponse(String response) {
+        Gson gson = new Gson();
+        return gson.fromJson(response, Reservation.class);
+    }
+
+    private Spot parseSpotResponse(String response) {
+        JsonParser parser = new JsonParser();
+        JsonObject spotObj = parser.parse(response).getAsJsonObject();
+        String id = spotObj.get("id").getAsString();
+        JsonObject attrObj = spotObj.get("attributes").getAsJsonObject();
+        HashMap<String, String> attrs = (new Gson()).fromJson(attrObj, new TypeToken<HashMap<String, String>>(){}.getType());
+
+        return new Spot(id, attrs);
+    }
+
+    private void redirectToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    // Shares the user's current location with the current overlay fragment.
+    private void shareLocation() {
+        // Attempt to cast the fragment to a fragment that requires the current location.
+        try {
+            DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
+            Fragment childFragment = driverHomeFrag.getChildFragmentManager().
+                    findFragmentById(R.id.driver_fragment_container);
+            ((NeedsLocation)childFragment).setLocation(mUserLocation);
         } catch(ClassCastException e) {}
     }
 }

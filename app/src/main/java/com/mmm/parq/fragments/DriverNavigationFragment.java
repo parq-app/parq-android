@@ -15,35 +15,36 @@ import android.widget.RelativeLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
+import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
 import com.mmm.parq.exceptions.RouteNotFoundException;
+import com.mmm.parq.interfaces.HasReservation;
+import com.mmm.parq.interfaces.HasSpot;
+import com.mmm.parq.interfaces.MapController;
 import com.mmm.parq.layouts.ReservedSpotCardView;
+import com.mmm.parq.models.Directions;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.DirectionsParser;
 import com.mmm.parq.utils.HttpClient;
-import com.mmm.parq.utils.NeedsLocation;
+import com.mmm.parq.interfaces.NeedsLocation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 public class DriverNavigationFragment extends Fragment implements NeedsLocation {
     private Button mNavigationButton;
-    private Gson mGson;
+    private Directions mDirections;
     private Location mLocation;
     private OnDirectionsRequestedListener mCallback;
     private RelativeLayout mRelativeLayout;
@@ -57,12 +58,9 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
     static private final int CARD_BOTTOM_MARGIN = 4;
     static private final int MAPS_REQUEST_CODE = 1;
 
-    static private String CLASS = "DriverNavigation";
+    static private String TAG = DriverNavigationFragment.class.getSimpleName();
 
-    public interface OnDirectionsRequestedListener {
-        void drawPathToSpot(List<LatLng> path, LatLong spotLocation);
-        void setSpot(Spot spot);
-        Reservation getReservation();
+    public interface OnDirectionsRequestedListener extends MapController, HasSpot, HasReservation {
     }
 
     public DriverNavigationFragment() {}
@@ -73,58 +71,48 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
         View view = inflater.inflate(R.layout.fragment_navigation_driver, container,
                 false);
 
-        mGson = new Gson();
         mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.navigation_layout);
-        mReservation = mCallback.getReservation();
         mLocation = ((DriverActivity) getActivity()).getLocation();
         if (mLocation != null) {
             locationSetLatch.countDown();
         }
 
-        // Tell the map fragment to draw the directions path.
-        String geohash = mReservation.getAttribute("geohash");
-        final LatLong latLong = GeoHash.decodeHash(geohash);
-        
-        // Request directions to the reserved spot using Google Directions API
-        requestDirections(latLong, new HttpClient.VolleyCallback<String>() {
+        Thread fetchData = new Thread() {
             @Override
-            public void onSuccess(String directionsResponse) {
-                DirectionsParser parser = new DirectionsParser(directionsResponse);
-                List<LatLng> path = new ArrayList<>();
+            public void run() {
+                // Get the reservation
                 try {
-                    path = parser.parsePath();
-                } catch (RouteNotFoundException e) {
-                    Log.d(CLASS, "No route found: " + e.toString());
+                    // Wait for the user's location to be set on the activity.
+                    locationSetLatch.await();
+
+                    String reservationId = null;
+                    if (getArguments() != null) {
+                        reservationId = getArguments().getString("reservationId");
+                    }
+                    mReservation = mCallback.getReservation(reservationId).get();
+                    mDirections = getDirections().get();
+                    mSpot = mCallback.getSpot(mReservation.getAttribute("spotId")).get();
+
+                    // UI changes have to be made on the UiThread.
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Draw route on map
+                            LatLong latLong = GeoHash.decodeHash(mReservation.getAttribute("geohash"));
+                            mCallback.drawPathToSpot(mDirections.getPath(), latLong);
+
+                            // Display the spot information card
+                            showSpotCard(mSpot, mDirections.getTimeToSpot());
+                        }
+                    });
+
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
                 }
-                final String timeToSpot = parser.parseTime();
-
-                // Request the spot for this reservation
-                requestSpot(mReservation.getAttribute("spotId"), new HttpClient.VolleyCallback<String>() {
-                    @Override
-                    public void onSuccess(String spotResponse) {
-                        mSpot = parseSpotResponse(spotResponse);
-                        // Tell the activity what the spot is so that it can be shared with other frags
-                        mCallback.setSpot(mSpot);
-
-                        showSpotCard(mSpot, timeToSpot);
-                    }
-
-                    @Override
-                    public void onError(VolleyError error) {
-                        Log.d(CLASS, error.toString());
-                    }
-                });
-
-                // Tell the activity to display the path on the map.
-                mCallback.drawPathToSpot(path, latLong);
             }
-
-            @Override
-            public void onError(VolleyError error) {
-                Log.d(CLASS, error.getMessage());
-            }
-        });
+        };
+        fetchData.start();
 
         mNavigationButton = (Button) view.findViewById(R.id.navigate_button);
         mNavigationButton.setOnClickListener(new View.OnClickListener() {
@@ -155,60 +143,52 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
 
     // Send a request to Google Directions API for directions from the user's current location to their
     // reserved spot.
-    private void requestDirections(final LatLong latLong, final HttpClient.VolleyCallback<String> callback) {
-        final String apiKey = getString(R.string.google_maps_key);
-
-        // Do this in a separate thread since it needs to wait for location to be set by the activity
-        Thread directionsThread = new Thread() {
-            public void run() {
-                // Wait for the mLocation to be intialized by the activity.
-                try {
-                    locationSetLatch.await();
-                } catch(InterruptedException e) {
-                    Log.w("Thread Interrupted", e);
-                }
-
-                // Request directions
-                String directionsUrl = String.format("%s?origin=%f,%f&destination=%f,%f&key=%s\t\n",
-                        getString(R.string.google_directions_endpoint), mLocation.getLatitude(),
-                        mLocation.getLongitude(), latLong.getLat(),
-                        latLong.getLon(), apiKey);
-                StringRequest directionsRequest = new StringRequest(Request.Method.GET, directionsUrl, new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                       callback.onSuccess(response);
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        callback.onError(error);
-                    }
-                });
-
-                mQueue.add(directionsRequest);
-            }
-        };
-
-        directionsThread.start();
+    private FutureTask<Directions> getDirections() {
+        FutureTask<Directions> ft = new FutureTask<Directions>(new GetDirections());
+        ft.run();
+        return ft;
     }
 
-    private void requestSpot(String spotId, final HttpClient.VolleyCallback<String> callback) {
-        // Request the spot
-        String url = String.format("%s/%s/%s", getString(R.string.api_address),
-                getString(R.string.spots_endpoint), spotId);
-        StringRequest spotRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                callback.onSuccess(response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                callback.onError(error);
-            }
-        });
+    private class GetDirections implements Callable<Directions> {
+        public Directions call() {
+            Future<String> directionsFuture = requestDirections();
+            Directions directions = new Directions();
+            try {
+                DirectionsParser parser = new DirectionsParser(directionsFuture.get());
+                List<LatLng> path = new ArrayList<>();
 
-        mQueue.add(spotRequest);
+                try {
+                    path = parser.parsePath();
+                } catch (RouteNotFoundException e) {
+                    Log.w(TAG, "No route found: " + e.toString());
+                }
+                String timeToSpot = parser.parseTime();
+
+                directions.setPath(path);
+                directions.setTimeToSpot(timeToSpot);
+            } catch (Exception e) {
+                Log.w(TAG, e.toString());
+            }
+            return directions;
+        }
+    }
+
+    private Future<String> requestDirections() {
+        String apiKey = getString(R.string.google_maps_key);
+        RequestFuture<String> future = RequestFuture.newFuture();
+        String geohash = mReservation.getAttribute("geohash");
+        LatLong spotLatLong = GeoHash.decodeHash(geohash);
+
+        // Send directions request.
+        String directionsUrl = String.format("%s?origin=%f,%f&destination=%f,%f&key=%s\t\n",
+                getString(R.string.google_directions_endpoint), mLocation.getLatitude(),
+                mLocation.getLongitude(), spotLatLong.getLat(),
+                spotLatLong.getLon(), apiKey);
+        StringRequest directionsRequest = new StringRequest(Request.Method.GET,
+                directionsUrl, future, future);
+        mQueue.add(directionsRequest);
+
+        return future;
     }
 
     private void showSpotCard(Spot spot, String timeToSpot) {
@@ -221,17 +201,6 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
 
         mRelativeLayout.addView(reservedSpotCardView, params);
     }
-
-    private Spot parseSpotResponse(String response) {
-        JsonParser parser = new JsonParser();
-        JsonObject spotObj = parser.parse(response).getAsJsonObject();
-        String id = spotObj.get("id").getAsString();
-        JsonObject attrObj = spotObj.get("attributes").getAsJsonObject();
-        HashMap<String, String> attrs = mGson.fromJson(attrObj, new TypeToken<HashMap<String, String>>(){}.getType());
-
-        return new Spot(id, attrs);
-    }
-
     @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
