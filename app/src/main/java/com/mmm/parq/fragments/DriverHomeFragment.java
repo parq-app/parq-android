@@ -27,10 +27,8 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
-import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -44,13 +42,10 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.gson.Gson;
 import com.mmm.parq.R;
-import com.mmm.parq.activities.DriverActivity;
-import com.mmm.parq.models.Reservation;
-import com.mmm.parq.models.Spot;
+import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.utils.HttpClient;
-import com.mmm.parq.utils.NeedsLocation;
+import com.mmm.parq.interfaces.NeedsLocation;
 
 import org.json.JSONObject;
 
@@ -63,7 +58,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                                                             GoogleMap.OnMyLocationButtonClickListener,
                                                             NeedsLocation {
     private CountDownLatch childFragmentInitializedLatch = new CountDownLatch(1);
-    private CountDownLatch reservationSetLatch = new CountDownLatch(1);
     private CountDownLatch stateSetLatch = new CountDownLatch(1);
     private Location mLastLocation;
     private GoogleMap mMap;
@@ -72,6 +66,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private Polyline mDirectionsPath;
     private RequestQueue mQueue;
     private State mState;
+    private String mReservationId;
     private OnLocationReceivedListener mCallback;
 
     static private final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -87,11 +82,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         FIND_SPOT, NAVIGATION, OCCUPY_SPOT, END_RESERVATION
     }
 
-    public interface OnLocationReceivedListener {
-        void setLocation(Location location);
-        void setReservation(Reservation reservation);
-        Reservation getReservation();
-        void setSpot(Spot spot);
+    public interface OnLocationReceivedListener extends HasLocation {
     }
 
     public DriverHomeFragment() {}
@@ -101,6 +92,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home_driver, container, false);
         mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+        mReservationId = null;
 
         if (savedInstanceState != null) {
             mState = (State) savedInstanceState.getSerializable("state");
@@ -127,18 +119,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         };
         stateThread.start();
 
-        // Watch for when the reservation is initialized and notify people who care
-        Thread reservationInitializedThread = new Thread() {
-            public void run() {
-                while (mCallback.getReservation() == null) {
-                   // do nothing
-                }
-                reservationSetLatch.countDown();
-            }
-        };
-        reservationInitializedThread.start();
-
         // Watch for when the child fragment is actually initialized & notify people who care
+
+        // TODO(kenzshelley) This is a shitty way to handle this. The problem is that the child fragment
+        // isn't actually initialized immediately after calling 'commit()'. As a result, you have to
+        // look for when it's no longer null.
         Thread childFragmentInitializedThread = new Thread() {
             public void run() {
                 while(getChildFragmentManager().findFragmentById(R.id.driver_fragment_container) == null) {
@@ -220,17 +205,20 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
     public void setOverlayFragment() {
         Fragment fragment = null;
+        Bundle args = new Bundle();
         switch (mState) {
             case FIND_SPOT:
                 fragment = new DriverFindSpotFragment();
                 break;
             case NAVIGATION:
                 fragment = new DriverNavigationFragment();
+                args.putString("reservationId", mReservationId);
+                fragment.setArguments(args);
                 break;
             case OCCUPY_SPOT:
                 fragment = new DriverOccupiedSpotFragment();
-                Bundle args = new Bundle();
                 args.putBoolean("occupied", true);
+                args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
             case END_RESERVATION:
@@ -279,7 +267,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             Log.w(TAG, "No start marker!");
             return;
         }
-        zoomCameraToMarker(mDestMarker);
+        zoomCameraToDestinationMarker();;
     }
 
     private void zoomCameraToMarkers(List<Marker> markers) {
@@ -302,106 +290,17 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mMap.animateCamera(cameraUpdate);
     }
 
-    private void zoomCameraToMarker(Marker marker) {
+    public void zoomCameraToDestinationMarker() {
         CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(marker.getPosition())
+                .target(mDestMarker.getPosition())
                 .zoom(15)
                 .build();
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
-    /*
-    Retrieves the user's current reservation from the server and set it as the
-    activity's current reservation.
-
-    Note that it is only called when the app is restored and forced into the OCCUPY_SPOT state due
-    to an active reservation.
-     */
-    private void updateReservation(final String reservationId) {
-        getReservation(reservationId, new HttpClient.VolleyCallback<String>() {
-            @Override
-            public void onSuccess(String response) {
-                Gson gson = new Gson();
-                // For some reason gson isn't parsing attributes correctly here, so:
-                Reservation reservation = gson.fromJson(response, Reservation.class);
-                Log.d(TAG, response);
-                mCallback.setReservation(reservation);
-            }
-
-            @Override
-            public void onError(VolleyError error) {
-                Log.d(TAG + ":Error", error.toString());
-            }
-        });
-    }
-
-    private void getReservation(String reservationId, final HttpClient.VolleyCallback<String> callback) {
-        String url = String.format("%s/%s/%s", getString(R.string.api_address),
-                getString(R.string.reservations_endpoint), reservationId);
-        Log.d(TAG, url);
-
-        StringRequest reservationRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                callback.onSuccess(response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                callback.onError(error);
-            }
-        });
-
-        mQueue.add(reservationRequest);
-    }
-
-    /*
-    Retrieves the spot associated with the user's current reservation from the server
-    and set it as the activity's current spot.
-
-    Note that it is only called when the app is restored and forced into the OCCUPY_SPOT state due
-    to an active reservation.
-     */
-    private void updateSpot(String spotId) {
-        getSpot(spotId, new HttpClient.VolleyCallback<String>() {
-            @Override
-            public void onSuccess(String response) {
-                Gson gson = new Gson();
-                Spot spot = gson.fromJson(response, Spot.class);
-                mCallback.setSpot(spot);
-
-                // Add the spot's location to the map
-                LatLong latLng = GeoHash.decodeHash(spot.getAttribute("geohash"));
-                mDestMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(latLng.getLat(), latLng.getLon())));
-                zoomCameraToMarker(mDestMarker);
-
-                // Everything needed to initialize the OccupySpotFragment is initialized now.
-                stateSetLatch.countDown();
-            }
-
-            @Override
-            public void onError(VolleyError error) {
-                Log.e(TAG + ":Error", error.toString());
-            }
-        });
-    }
-
-    private void getSpot(String spotId, final HttpClient.VolleyCallback<String> callback) {
-        String url = String.format("%s/%s/%s", getString(R.string.api_address), "spots", spotId);
-
-        StringRequest reservationRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                callback.onSuccess(response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                callback.onError(error);
-            }
-        });
-
-        mQueue.add(reservationRequest);
+    public void addDestinationMarker(LatLong latLong) {
+        // Add the spot's location to the map
+        mDestMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
     }
 
     private void getUser(final HttpClient.VolleyCallback<JSONObject> callback) {
@@ -449,37 +348,16 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                     if (response.getJSONObject("attributes").has("activeDriverReservations")) {
                         JSONObject activeReservations = response.getJSONObject("attributes").getJSONObject("activeDriverReservations");
                         Iterator<String> resKeys = activeReservations.keys();
-                        String reservationId = null;
                         if (resKeys.hasNext()) {
                             JSONObject resObj = activeReservations.getJSONObject(resKeys.next());
-                            reservationId = resObj.getString("reservationId");
+                            mReservationId = resObj.getString("reservationId");
                         }
 
                         mState = State.OCCUPY_SPOT;
-
-                        // Get the reservation and set it as the activity's current reservation.
-                        updateReservation(reservationId);
-
-                        // Wait for the reservation to be initialized, then get the spot associated
-                        // with the reservation and set it as the activity's current spot.
-                        Thread spotThread = new Thread() {
-                            public void run() {
-                                try {
-                                    reservationSetLatch.await();
-                                } catch (InterruptedException e) {
-                                    Log.w(TAG, e.toString());
-                                }
-
-                                String spotId = ((DriverActivity) getActivity()).getReservation().getAttribute("spotId");
-                                updateSpot(spotId);
-                            }
-                        };
-
-                        spotThread.start();
                     } else {
                         mState = State.FIND_SPOT;
-                        stateSetLatch.countDown();
                     }
+                    stateSetLatch.countDown();
                 } catch (org.json.JSONException e) {
                     Log.e(TAG, "Failed to parse response: " + e.toString());
                 }

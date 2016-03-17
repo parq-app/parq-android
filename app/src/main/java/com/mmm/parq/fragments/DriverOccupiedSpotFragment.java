@@ -3,7 +3,6 @@ package com.mmm.parq.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,13 +15,19 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.github.davidmoten.geo.GeoHash;
+import com.github.davidmoten.geo.LatLong;
 import com.mmm.parq.R;
-import com.mmm.parq.activities.DriverActivity;
+import com.mmm.parq.interfaces.HasReservation;
+import com.mmm.parq.interfaces.HasSpot;
+import com.mmm.parq.interfaces.MapController;
 import com.mmm.parq.layouts.OccupiedSpotCardView;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
+
+import java.util.concurrent.FutureTask;
 
 public class DriverOccupiedSpotFragment extends Fragment {
     private Button mEndReservationButton;
@@ -37,10 +42,9 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
     static private String TAG = DriverOccupiedSpotFragment.class.getSimpleName();
 
-    public interface OnNavigationCompletedListener {
-        void clearMap();
-        Spot getSpot();
-        Reservation getReservation();
+    public interface OnNavigationCompletedListener extends MapController,
+            HasSpot, HasReservation {
+        void showEndReservationFragment(double cost);
     }
 
     public DriverOccupiedSpotFragment() {}
@@ -48,9 +52,6 @@ public class DriverOccupiedSpotFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        mSpot = mCallback.getSpot();
-        mReservation = mCallback.getReservation();
     }
 
     @Override
@@ -60,7 +61,47 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
         // Clear the map
         mCallback.clearMap();
-        showReservationCard();
+
+        Thread fetchData = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    // Fetch data from the activity
+                    String reservationId = null;
+                    if (getArguments() != null) {
+                        reservationId = getArguments().getString("reservationId");
+                    }
+                    mReservation = mCallback.getReservation(reservationId).get();
+                    mSpot = mCallback.getSpot(mReservation.getAttribute("spotId")).get();
+
+                    // Do things that require this data
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Display the reservation card using the UI thread
+                            showReservationCard();
+
+                            // Show destination marker & zoom to it
+                            LatLong latLong = GeoHash.decodeHash(mSpot.getAttribute("geohash"));
+                            mCallback.addDestinationMarker(latLong);
+                            mCallback.zoomCameraToDestinationMarker();
+                        }
+                    });
+                    // Occupy the spot
+                    if (getArguments() != null) {
+                        boolean alreadyOccupied = getArguments().getBoolean("occupied");
+                        if (!alreadyOccupied) {
+                            occupyReservation();
+                        }
+                    } else {
+                        occupyReservation();
+                    }
+                } catch(Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+        };
+        fetchData.start();
 
         mEndReservationButton = (Button) view.findViewById(R.id.leave_spot_button);
         mEndReservationButton.setOnClickListener(new View.OnClickListener() {
@@ -69,28 +110,9 @@ public class DriverOccupiedSpotFragment extends Fragment {
                 // Free the spot
                 leaveSpot();
 
-                DriverEndReservationFragment driverEndReservationFragment = new DriverEndReservationFragment();
-                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                // TODO(kenzshelley) Remove this once Reservations include cost themselves.
-                Bundle args = new Bundle();
-                args.putDouble("cost", mOccupiedSpotCardView.getCurrentCost());
-                driverEndReservationFragment.setArguments(args);
-
-                fragmentTransaction.replace(R.id.container, driverEndReservationFragment);
-                ((DriverActivity) getActivity()).setState(DriverHomeFragment.State.END_RESERVATION);
-                fragmentTransaction.commit();
+                mCallback.showEndReservationFragment(mOccupiedSpotCardView.getCurrentCost());
             }
         });
-
-        // Occupy the spot
-        if (this.getArguments() != null) {
-            boolean alreadyOccupied = this.getArguments().getBoolean("occupied");
-            if (!alreadyOccupied) {
-                occupyReservation();
-            }
-        } else {
-            occupyReservation();
-        }
 
         return view;
     }
@@ -121,7 +143,6 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(leaveRequest);
-
     }
 
     private void occupyReservation() {
