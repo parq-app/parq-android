@@ -5,8 +5,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -19,19 +19,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
-
-import org.json.JSONObject;
 
 public class LoginFragment extends Fragment {
 
@@ -75,7 +67,13 @@ public class LoginFragment extends Fragment {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                attemptRegister();
+//                attemptRegister();
+                FragmentManager fragmentManager = getFragmentManager();
+                RegisterFragment registerFragment = new RegisterFragment();
+                fragmentManager.beginTransaction().
+                        replace(R.id.login_fragment_container, registerFragment).
+                        addToBackStack(null).
+                        commit();
             }
         });
         mProgressView = view.findViewById(R.id.login_progress);
@@ -91,46 +89,6 @@ public class LoginFragment extends Fragment {
 
         if (attemptSubmit(email, password)) {
             mFirebaseRef.authWithPassword(email, password, new AuthResultHandler());
-        }
-    }
-
-    private void attemptRegister() {
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
-        if (attemptSubmit(email, password)) {
-            //TODO(mrgrossm): make async request to /user
-            RequestQueue queue = Volley.newRequestQueue(getActivity());
-            String url = getString(R.string.api_address) + "/users";
-            JSONObject creds = new JSONObject();
-            try {
-                creds.put("email", email);
-                creds.put("password", password);
-            } catch (Exception e) {
-                Log.e(TAG, "error with json");
-            }
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, creds.toString(), new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    showProgress(false);
-                    mEmailView.setError(null);
-                    mPasswordView.setError(null);
-                    mPasswordView.setText("");
-                    mEmailView.setText("");
-                    Snackbar.make(getView().findViewById(R.id.login_layout), R.string.snackbar_register, Snackbar.LENGTH_LONG).show();
-
-                    // TODO(matt): add snackbar
-
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    showProgress(false);
-                    Log.e(TAG, "error with volley");
-                    Log.e(TAG, error.toString());
-                }
-            });
-            queue.add(jsonObjectRequest);
         }
     }
 

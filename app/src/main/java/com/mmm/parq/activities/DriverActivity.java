@@ -13,6 +13,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -36,10 +37,12 @@ import com.mmm.parq.fragments.DriverOccupiedSpotFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
 import com.mmm.parq.interfaces.HasLocation;
+import com.mmm.parq.interfaces.HasUser;
+import com.mmm.parq.interfaces.NeedsLocation;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
+import com.mmm.parq.models.User;
 import com.mmm.parq.utils.HttpClient;
-import com.mmm.parq.interfaces.NeedsLocation;
 
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +53,7 @@ import java.util.concurrent.FutureTask;
 
 public class DriverActivity extends FragmentActivity implements
         HasLocation,
+        HasUser,
         DriverNavigationFragment.OnDirectionsRequestedListener,
         DriverOccupiedSpotFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
@@ -62,6 +66,8 @@ public class DriverActivity extends FragmentActivity implements
     private RequestQueue mQueue;
     private Reservation mReservation;
     private Spot mSpot;
+    private TextView mNameView;
+    private User mUser;
     private Location mUserLocation;
 
     private final static String TAG = DriverActivity.class.getSimpleName();
@@ -108,6 +114,10 @@ public class DriverActivity extends FragmentActivity implements
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
+
+        // Set the user's name in the nav drawer.
+        mNameView = (TextView) view.getHeaderView(0).findViewById(R.id.name);
+        setUserName();
 
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -314,12 +324,59 @@ public class DriverActivity extends FragmentActivity implements
         }
     }
 
+    // Implementing HasUser Interface
+    public Future<User> getUser() {
+        // Get user id
+        Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+        AuthData authData = firebaseRef.getAuth();
+        if (authData == null) {
+            redirectToLogin();
+            return null;
+        }
+
+        String userId = authData.getUid();
+        FutureTask<User> ft = new FutureTask<User>(new GetUser(userId));
+        ft.run();
+        return ft;
+    }
+
+    private class GetUser implements Callable<User> {
+        private String mUserId;
+
+        public GetUser(String userId) { mUserId = userId; }
+
+        public User call() {
+            if (mUser != null) {
+                return mUser;
+            }
+
+            Future<String> userFuture = requestUser(mUserId);
+            try {
+                Gson gson = new Gson();
+                mUser = gson.fromJson(userFuture.get(), User.class);
+            } catch (Exception e) {
+                Log.w(TAG, e.toString());
+            }
+
+            return mUser;
+        }
+    }
+
     // TODO(kenzshelley) Remove this as soon as DriverEndReservationFragment handles resumptions properly.
     public Spot getSpot() {
         return mSpot;
     }
 
     // Private helper methods
+    private Future<String> requestUser(String userId) {
+        RequestFuture<String> future = RequestFuture.newFuture();
+        String url = String.format("%s/users/%s", getString(R.string.api_address), userId);
+        StringRequest userRequest = new StringRequest(Request.Method.GET, url, future, future);
+        mQueue.add(userRequest);
+
+        return future;
+    }
+
     private Future<String> requestSpot(String spotId) {
         RequestFuture<String> future = RequestFuture.newFuture();
         String url = String.format("%s/%s/%s", getString(R.string.api_address),
@@ -399,5 +456,25 @@ public class DriverActivity extends FragmentActivity implements
                     findFragmentById(R.id.driver_fragment_container);
             ((NeedsLocation)childFragment).setLocation(mUserLocation);
         } catch(ClassCastException e) {}
+    }
+
+    private void setUserName() {
+        Thread initializeUser = new Thread() {
+            public void run() {
+                try {
+                    mUser = getUser().get();
+                    String firstName = "No";
+                    String lastName = "Name";
+                    if (mUser.hasAttribute("firstName") && mUser.hasAttribute("lastName")) {
+                        firstName = mUser.getAttribute("firstName");
+                        lastName = mUser.getAttribute("lastName");
+                    }
+                    mNameView.setText(String.format("%s %s", firstName, lastName));
+                } catch (Exception e) {
+                    Log.w(TAG, e.getMessage());
+                }
+            }
+        };
+        initializeUser.start();
     }
 }
