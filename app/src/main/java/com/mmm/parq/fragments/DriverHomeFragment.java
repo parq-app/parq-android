@@ -3,7 +3,6 @@ package com.mmm.parq.fragments;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -13,7 +12,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Display;
@@ -22,13 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.firebase.client.AuthData;
-import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -48,14 +40,11 @@ import com.google.gson.JsonParser;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasReservation;
-import com.mmm.parq.models.Reservation;
-import com.mmm.parq.utils.HttpClient;
 import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.interfaces.NeedsLocation;
+import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.User;
 import com.mmm.parq.utils.HttpClient;
-
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -305,30 +294,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mDestMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
     }
 
-    private void getUser(final HttpClient.VolleyCallback<JSONObject> callback) {
-        // Get user id
-        Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
-        AuthData authData = firebaseRef.getAuth();
-        if (authData == null) return;
-        String userId = authData.getUid();
-
-        // Request user
-        String url = String.format("%s/users/%s", getString(R.string.api_address), userId);
-        JsonObjectRequest reservationRequest = new JsonObjectRequest(Request.Method.GET, url, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                callback.onSuccess(response);
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                callback.onError(error);
-            }
-        });
-
-        mQueue.add(reservationRequest);
-    }
-
     /*
     Determines which state the activity should be in based upon whether or not the current user has
     an active reservation.
@@ -339,7 +304,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
      */
     private void initializeState() {
         // Default state is FIND_SPOT, unless the user has an active reservation.
-        Log.d(TAG, "LOOK HERE MOTHERFUCKER");
         mState = State.FIND_SPOT;
 
         Thread initializeUser = new Thread() {
