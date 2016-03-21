@@ -49,6 +49,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
 public class DriverNavigationFragment extends Fragment implements NeedsLocation {
+    private Boolean mIsTransitioning;
     private Button mNavigationButton;
     private Directions mDirections;
     private Location mLocation;
@@ -131,13 +132,13 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
                 setStateNavigation();
                 startNavigation();
 
+                mIsTransitioning = true;
+                mCallback.setState(DriverHomeFragment.State.ARRIVE_SPOT);
                 DriverArriveSpotFragment driverArriveSpotFragment = new DriverArriveSpotFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
                 fragmentTransaction.replace(R.id.driver_fragment_container, driverArriveSpotFragment);
-                mCallback.setState(DriverHomeFragment.State.ARRIVE_SPOT);
                 fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
-
             }
         });
 
@@ -149,7 +150,7 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
         super.onStop();
 
         // If the fragment is stopping for any other reason than transitioning to the next state
-        if (mCallback.getState() != DriverHomeFragment.State.ARRIVE_SPOT) {
+        if (!mIsTransitioning) {
 
             // After some delay, free the spot.
             Timer timer = new Timer();

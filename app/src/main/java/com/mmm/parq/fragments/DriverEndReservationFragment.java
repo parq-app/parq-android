@@ -20,6 +20,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
+import com.mmm.parq.interfaces.NeedsState;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.HttpClient;
 
@@ -35,7 +36,7 @@ public class DriverEndReservationFragment extends Fragment {
     private TextView mAddress;
     private TextView mCost;
 
-    public interface OnChangeFragmentListener {
+    public interface OnChangeFragmentListener extends NeedsState {
         void setFragment(Fragment fragment);
     }
 
@@ -65,14 +66,7 @@ public class DriverEndReservationFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 submitRating(mRatingBar.getRating(), mComment.getText().toString());
-
-                ((DriverActivity)getActivity()).setState(DriverHomeFragment.State.FIND_SPOT);
-
-                DriverHomeFragment driverHomeFragment = new DriverHomeFragment();
-                mCallback.setFragment(driverHomeFragment);
-                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.container, driverHomeFragment);
-                fragmentTransaction.commit();
+                startFindSpotFragment();
             }
         });
 
@@ -88,6 +82,17 @@ public class DriverEndReservationFragment extends Fragment {
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
+    }
+
+    private void startFindSpotFragment() {
+        Bundle args = new Bundle();
+        args.putSerializable("state", DriverHomeFragment.State.FIND_SPOT);
+        DriverHomeFragment driverHomeFragment = new DriverHomeFragment();
+        driverHomeFragment.setArguments(args);
+        mCallback.setFragment(driverHomeFragment);
+
+        getFragmentManager().beginTransaction().replace(R.id.container, driverHomeFragment).
+                commit();
     }
 
     private void submitRating(final double rating, String comment) {
@@ -117,6 +122,7 @@ public class DriverEndReservationFragment extends Fragment {
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(ratingRequest);
+
     }
 
 }

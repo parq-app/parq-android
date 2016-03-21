@@ -88,10 +88,10 @@ public class DriverArriveSpotFragment extends Fragment {
             occupySpot();
         }
 
+        mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
         DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
-        mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }

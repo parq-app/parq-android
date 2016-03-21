@@ -30,6 +30,7 @@ import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
 import com.mmm.parq.fragments.DriverArriveSpotFragment;
 import com.mmm.parq.fragments.DriverEndReservationFragment;
+import com.mmm.parq.fragments.DriverFindSpotFragment;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
 import com.mmm.parq.fragments.DriverNavigationFragment;
@@ -54,6 +55,7 @@ import java.util.concurrent.FutureTask;
 public class DriverActivity extends FragmentActivity implements
         HasLocation,
         HasUser,
+        DriverFindSpotFragment.HostsDriverFindSpotFragment,
         DriverNavigationFragment.OnDirectionsRequestedListener,
         DriverOccupiedSpotFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,

@@ -12,12 +12,16 @@ import android.widget.Button;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
 import com.mmm.parq.interfaces.MapController;
+import com.mmm.parq.interfaces.NeedsState;
 
 public class DriverFindSpotFragment extends Fragment {
     private Button mFindParkingButton;
-    private MapController mCallback;
+    private HostsDriverFindSpotFragment mCallback;
 
     public DriverFindSpotFragment() {}
+
+    public interface HostsDriverFindSpotFragment extends MapController, NeedsState {
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -44,7 +48,7 @@ public class DriverFindSpotFragment extends Fragment {
         super.onAttach(activity);
 
         try {
-            mCallback = (MapController) activity;
+            mCallback = (HostsDriverFindSpotFragment) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
@@ -53,6 +57,7 @@ public class DriverFindSpotFragment extends Fragment {
 
     private void reserveSpot() {
         // Start the navigation fragment.
+        mCallback.setState(DriverHomeFragment.State.NAVIGATION);
         DriverNavigationFragment driverNavigationFragment = new DriverNavigationFragment();
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.driver_fragment_container, driverNavigationFragment);
