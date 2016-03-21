@@ -20,7 +20,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
-import com.mmm.parq.interfaces.NeedsState;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.HttpClient;
 
@@ -36,7 +35,7 @@ public class DriverEndReservationFragment extends Fragment {
     private TextView mAddress;
     private TextView mCost;
 
-    public interface OnChangeFragmentListener extends NeedsState {
+    public interface OnChangeFragmentListener {
         void setFragment(Fragment fragment);
     }
 
@@ -67,7 +66,7 @@ public class DriverEndReservationFragment extends Fragment {
             public void onClick(View v) {
                 submitRating(mRatingBar.getRating(), mComment.getText().toString());
 
-                mCallback.setState(DriverHomeFragment.State.FIND_SPOT);
+                ((DriverActivity)getActivity()).setState(DriverHomeFragment.State.FIND_SPOT);
 
                 DriverHomeFragment driverHomeFragment = new DriverHomeFragment();
                 mCallback.setFragment(driverHomeFragment);
@@ -118,7 +117,6 @@ public class DriverEndReservationFragment extends Fragment {
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(ratingRequest);
-
     }
 
 }
