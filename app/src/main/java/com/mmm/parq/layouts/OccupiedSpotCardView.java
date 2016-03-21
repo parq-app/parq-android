@@ -49,7 +49,7 @@ public class OccupiedSpotCardView extends CardView {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mNetCost = getElapsedTimeMinutes() * rate;
+                        mNetCost = getElapsedTimeMinutes() * (rate / 60);
                         mTimeElapsedText.setText(getElapsedTimeString());
                         mNetCostText.setText(String.format("$%.2f", mNetCost));
                     }
