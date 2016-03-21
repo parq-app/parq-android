@@ -41,6 +41,8 @@ import com.mmm.parq.interfaces.NeedsLocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -55,6 +57,9 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
     private RequestQueue mQueue;
     private Reservation mReservation;
     private Spot mSpot;
+
+    private static int ONE_MINUTE = 60000;
+    private static int FREE_SPOT_DELAY = ONE_MINUTE * 5;
 
     private CountDownLatch locationSetLatch = new CountDownLatch(1);
 
@@ -137,6 +142,46 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
         });
 
         return view;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // If the fragment is stopping for any other reason than transitioning to the next state
+        if (mCallback.getState() != DriverHomeFragment.State.ARRIVE_SPOT) {
+
+            // After some delay, free the spot.
+            Timer timer = new Timer();
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (isAdded()) {
+                        leaveSpot();
+                        mCallback.setState(DriverHomeFragment.State.FIND_SPOT);
+                    }
+                }
+            };
+
+            timer.schedule(timerTask, FREE_SPOT_DELAY);
+        }
+    }
+
+    private void leaveSpot() {
+        String url = String.format("%s/reservations/%s/finish", getString(R.string.api_address), mReservation.getId());
+        StringRequest leaveRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.w("Failed occupy request: ", error.toString());
+            }
+        });
+
+        RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+        queue.add(leaveRequest);
     }
 
     public void setLocation(Location location) {
