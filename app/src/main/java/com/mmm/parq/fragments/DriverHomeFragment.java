@@ -44,6 +44,8 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasLocation;
+import com.mmm.parq.interfaces.HasReservation;
+import com.mmm.parq.models.Reservation;
 import com.mmm.parq.utils.HttpClient;
 import com.mmm.parq.interfaces.NeedsLocation;
 
@@ -79,10 +81,10 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private static String CLASS = "DriverHomeFragment";
 
     public enum State {
-        FIND_SPOT, NAVIGATION, OCCUPY_SPOT, END_RESERVATION
+        FIND_SPOT, NAVIGATION, ARRIVE_SPOT, OCCUPY_SPOT, END_RESERVATION
     }
 
-    public interface OnLocationReceivedListener extends HasLocation {
+    public interface OnLocationReceivedListener extends HasLocation, HasReservation {
     }
 
     public DriverHomeFragment() {}
@@ -174,19 +176,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode != MAPS_REQUEST_CODE) return;
-
-        // Switch to DriverOccupiedSpotFragment
-        DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
-        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
-        mState = State.OCCUPY_SPOT;
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
-    }
-
-    @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
 
@@ -212,6 +201,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 break;
             case NAVIGATION:
                 fragment = new DriverNavigationFragment();
+                args.putString("reservationId", mReservationId);
+                fragment.setArguments(args);
+                break;
+            case ARRIVE_SPOT:
+                fragment = new DriverArriveSpotFragment();
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
@@ -353,7 +347,16 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                             mReservationId = resObj.getString("reservationId");
                         }
 
-                        mState = State.OCCUPY_SPOT;
+                        try {
+                            Reservation reservation = mCallback.getReservation(mReservationId).get();
+                            if ("navigating".equals(reservation.getAttribute("status"))) {
+                                mState = State.ARRIVE_SPOT;
+                            } else {
+                                mState = State.OCCUPY_SPOT;
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, e.getMessage());
+                        }
                     } else {
                         mState = State.FIND_SPOT;
                     }

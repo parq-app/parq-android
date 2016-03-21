@@ -6,6 +6,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,8 @@ import android.widget.RelativeLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.github.davidmoten.geo.GeoHash;
@@ -26,6 +29,7 @@ import com.mmm.parq.exceptions.RouteNotFoundException;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
 import com.mmm.parq.interfaces.MapController;
+import com.mmm.parq.interfaces.NeedsState;
 import com.mmm.parq.layouts.ReservedSpotCardView;
 import com.mmm.parq.models.Directions;
 import com.mmm.parq.models.Reservation;
@@ -60,7 +64,8 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
 
     static private String TAG = DriverNavigationFragment.class.getSimpleName();
 
-    public interface OnDirectionsRequestedListener extends MapController, HasSpot, HasReservation {
+    public interface OnDirectionsRequestedListener extends MapController, HasSpot,
+            HasReservation, NeedsState {
     }
 
     public DriverNavigationFragment() {}
@@ -118,7 +123,16 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
         mNavigationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setStateNavigation();
                 startNavigation();
+
+                DriverArriveSpotFragment driverArriveSpotFragment = new DriverArriveSpotFragment();
+                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction.replace(R.id.driver_fragment_container, driverArriveSpotFragment);
+                mCallback.setState(DriverHomeFragment.State.ARRIVE_SPOT);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
+
             }
         });
 
@@ -147,6 +161,23 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
         FutureTask<Directions> ft = new FutureTask<Directions>(new GetDirections());
         ft.run();
         return ft;
+    }
+
+    private void setStateNavigation() {
+        String url = String.format("%s/reservations/%s/navigating", getString(R.string.api_address), mReservation.getId());
+        StringRequest occupyRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.w("Failed occupy request: ", error.toString());
+            }
+        });
+
+        RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+        queue.add(occupyRequest);
     }
 
     private class GetDirections implements Callable<Directions> {
