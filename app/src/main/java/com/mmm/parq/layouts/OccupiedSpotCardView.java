@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.mmm.parq.R;
+import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 
 import java.util.Timer;
@@ -19,20 +20,20 @@ public class OccupiedSpotCardView extends CardView {
     private TextView mTimeElapsedText;
     private TextView mNetCostText;
     private TextView mAddr;
-    private int mTimeElapsed;
     private Double mNetCost;
+
+    private long mStartTime;
 
     private static int ONE_MINUTE = 60000;
 
-    public OccupiedSpotCardView(final Activity activity, Spot spot) {
+    public OccupiedSpotCardView(final Activity activity, Spot spot, Reservation reservation) {
         super(activity);
         final double rate = Double.parseDouble(spot.getAttribute("costPerHour"));
         String addr = spot.getAttribute("addr");
+        mStartTime = Double.valueOf(reservation.getAttribute("timeStart")).longValue();
 
         LayoutInflater inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.occupied_spot_card, null);
-        mTimeElapsed = 0;
-        mNetCost = 0.0;
 
         mTimeElapsedText = (TextView) view.findViewById(R.id.time_elapsed);
         mNetCostText = (TextView) view.findViewById(R.id.net_cost);
@@ -48,17 +49,29 @@ public class OccupiedSpotCardView extends CardView {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mTimeElapsedText.setText(intToTimeString(mTimeElapsed));
+                        mNetCost = getElapsedTimeMinutes() * rate;
+                        mTimeElapsedText.setText(getElapsedTimeString());
                         mNetCostText.setText(String.format("$%.2f", mNetCost));
-                        mTimeElapsed += 1;
-                        mNetCost += rate / 60.0;
                     }
                 });
             }
         };
-        mTimer.schedule(timerTask, 0, ONE_MINUTE);
+        mTimer.schedule(timerTask, 0, ONE_MINUTE / 12);
 
         addView(view);
+    }
+
+    private String getElapsedTimeString() {
+        long diffInMinutes = getElapsedTimeMinutes();
+
+        return intToTimeString(diffInMinutes);
+    }
+
+    private long getElapsedTimeMinutes() {
+        long diffInMillis = System.currentTimeMillis() - mStartTime;
+        long diffInMinutes = (diffInMillis / 1000) / 60;
+
+        return diffInMinutes;
     }
 
     // TODO(kenzshelley) Remove this once Reservations include cost themselves.
@@ -66,9 +79,9 @@ public class OccupiedSpotCardView extends CardView {
         return mNetCost;
     }
 
-    private String intToTimeString(int timeInMinutes) {
-        int hours = timeInMinutes / 60;
-        int minutes = timeInMinutes % 60;
+    private String intToTimeString(long timeInMinutes) {
+        long hours = timeInMinutes / 60;
+        long minutes = timeInMinutes % 60;
 
         if (hours > 0) {
             return String.format("%d:%02d", hours, minutes);

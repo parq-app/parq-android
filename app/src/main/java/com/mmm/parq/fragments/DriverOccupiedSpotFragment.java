@@ -137,7 +137,7 @@ public class DriverOccupiedSpotFragment extends Fragment {
     }
 
     private void showReservationCard() {
-        mOccupiedSpotCardView = new OccupiedSpotCardView(getActivity(), mSpot);
+        mOccupiedSpotCardView = new OccupiedSpotCardView(getActivity(), mSpot, mReservation);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ConversionUtils.dpToPx(getActivity(), CARD_WIDTH),
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
         params.addRule(RelativeLayout.ABOVE, R.id.leave_spot_button);
