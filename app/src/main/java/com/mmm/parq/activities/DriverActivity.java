@@ -27,6 +27,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
+import com.mmm.parq.fragments.DriverArriveSpotFragment;
 import com.mmm.parq.fragments.DriverEndReservationFragment;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
@@ -52,7 +53,8 @@ public class DriverActivity extends FragmentActivity implements
         DriverNavigationFragment.OnDirectionsRequestedListener,
         DriverOccupiedSpotFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
-        DriverEndReservationFragment.OnChangeFragmentListener {
+        DriverEndReservationFragment.OnChangeFragmentListener,
+        DriverArriveSpotFragment.ArriveSpotListener {
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
     private Fragment mFragment;
@@ -160,7 +162,6 @@ public class DriverActivity extends FragmentActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
@@ -247,6 +248,7 @@ public class DriverActivity extends FragmentActivity implements
         return mUserLocation;
     }
 
+    @Override
     public void setState(DriverHomeFragment.State state) {
         try {
             DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);

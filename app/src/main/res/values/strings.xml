@@ -23,6 +23,7 @@
     <string name="find_spot_button_text">Find Spot</string>
     <string name="navigate_text">Navigate to spot</string>
     <string name="end_reservation">Leave spot</string>
+    <string name="arrive_spot_button_text">Arrive</string>
 
 
     <!-- Misc -->

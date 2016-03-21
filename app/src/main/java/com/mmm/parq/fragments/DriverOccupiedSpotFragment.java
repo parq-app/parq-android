@@ -87,15 +87,6 @@ public class DriverOccupiedSpotFragment extends Fragment {
                             mCallback.zoomCameraToDestinationMarker();
                         }
                     });
-                    // Occupy the spot
-                    if (getArguments() != null) {
-                        boolean alreadyOccupied = getArguments().getBoolean("occupied");
-                        if (!alreadyOccupied) {
-                            occupyReservation();
-                        }
-                    } else {
-                        occupyReservation();
-                    }
                 } catch(Exception e) {
                     Log.e(TAG, e.getMessage());
                 }
@@ -143,23 +134,6 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(leaveRequest);
-    }
-
-    private void occupyReservation() {
-        String url = String.format("%s/reservations/%s/occupy", getString(R.string.api_address), mReservation.getId());
-        StringRequest occupyRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.w("Failed occupy request: ", error.toString());
-            }
-        });
-
-        RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
-        queue.add(occupyRequest);
     }
 
     private void showReservationCard() {
