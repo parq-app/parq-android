@@ -42,18 +42,25 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.utils.HttpClient;
+import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.interfaces.NeedsLocation;
+import com.mmm.parq.models.User;
+import com.mmm.parq.utils.HttpClient;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
@@ -69,6 +76,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private RequestQueue mQueue;
     private State mState;
     private String mReservationId;
+    private User mUser;
     private OnLocationReceivedListener mCallback;
 
     static private final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -84,7 +92,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         FIND_SPOT, NAVIGATION, ARRIVE_SPOT, OCCUPY_SPOT, END_RESERVATION
     }
 
-    public interface OnLocationReceivedListener extends HasLocation, HasReservation {
+    public interface OnLocationReceivedListener extends HasLocation, HasReservation, HasUser {
     }
 
     public DriverHomeFragment() {}
@@ -331,46 +339,48 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
      */
     private void initializeState() {
         // Default state is FIND_SPOT, unless the user has an active reservation.
+        Log.d(TAG, "LOOK HERE MOTHERFUCKER");
         mState = State.FIND_SPOT;
 
-        // Request the user to see if they have an active reservation
-        getUser(new HttpClient.VolleyCallback<JSONObject>() {
-            @Override
-            public void onSuccess(JSONObject response) {
+        Thread initializeUser = new Thread() {
+            public void run() {
                 try {
-                    // If the user has an active reservation.
-                    if (response.getJSONObject("attributes").has("activeDriverReservations")) {
-                        JSONObject activeReservations = response.getJSONObject("attributes").getJSONObject("activeDriverReservations");
-                        Iterator<String> resKeys = activeReservations.keys();
-                        if (resKeys.hasNext()) {
-                            JSONObject resObj = activeReservations.getJSONObject(resKeys.next());
-                            mReservationId = resObj.getString("reservationId");
-                        }
-
-                        try {
-                            Reservation reservation = mCallback.getReservation(mReservationId).get();
-                            if ("navigating".equals(reservation.getAttribute("status"))) {
-                                mState = State.ARRIVE_SPOT;
-                            } else {
-                                mState = State.OCCUPY_SPOT;
-                            }
-                        } catch (Exception e) {
-                            Log.e(TAG, e.getMessage());
+                    mUser = mCallback.getUser().get();
+                    if (mUser.hasAttribute("activeDriverReservations")) {
+                        mReservationId = parseReservationId(mUser);
+                        // Determine the state of the reservation.
+                        Reservation reservation = mCallback.getReservation(mReservationId).get();
+                        if ("navigating".equals(reservation.getAttribute("status"))) {
+                            mState = DriverHomeFragment.State.ARRIVE_SPOT;
+                        } else {
+                            mState = DriverHomeFragment.State.OCCUPY_SPOT;
                         }
                     } else {
-                        mState = State.FIND_SPOT;
+                        mState = DriverHomeFragment.State.FIND_SPOT;
                     }
+
                     stateSetLatch.countDown();
-                } catch (org.json.JSONException e) {
-                    Log.e(TAG, "Failed to parse response: " + e.toString());
+                } catch(Exception e) {
+                    Log.w(TAG, e.getMessage());
                 }
             }
+        };
+        initializeUser.start();
+    }
 
-            @Override
-            public void onError(VolleyError error) {
-                Log.e(TAG, "Issue getting user: " + error.toString());
-            }
-        });
+    private String parseReservationId(User user) {
+        JsonParser parser = new JsonParser();
+        JsonObject activeReserations = parser.parse(user.getAttribute("activeDriverReservations")).getAsJsonObject();
+        Set<Map.Entry<String, JsonElement>> entries = activeReserations.entrySet();
+        String reservationId = null;
+        for (Map.Entry e : entries) {
+            reservationId = e.getKey().toString();
+
+            // There should only be one reservation
+            break;
+        }
+
+        return reservationId;
     }
 
     private void enableMyLocation() {
