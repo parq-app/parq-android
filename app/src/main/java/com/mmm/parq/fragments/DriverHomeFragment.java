@@ -193,7 +193,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public void onStart() {
         super.onStart();
 
-        setOverlayFragment();
+        Log.d(TAG, "in HomeFragment onStart");
+
+        if (mState != null) {
+          setOverlayFragment();
+        }
     }
 
     public void setOverlayFragment() {
@@ -320,32 +324,35 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
      */
     private void initializeState() {
         // Default state is FIND_SPOT, unless the user has an active reservation.
-        mState = State.FIND_SPOT;
-
-        Thread initializeUser = new Thread() {
-            public void run() {
-                try {
-                    mUser = mCallback.getUser().get();
-                    if (mUser.hasAttribute("activeDriverReservations")) {
-                        mReservationId = parseReservationId(mUser);
-                        // Determine the state of the reservation.
-                        Reservation reservation = mCallback.getReservation(mReservationId).get();
-                        if ("navigating".equals(reservation.getAttribute("status"))) {
-                            mState = DriverHomeFragment.State.ARRIVE_SPOT;
+//        mState = State.FIND_SPOT;
+        if (mState == null) {
+            Thread initializeUser = new Thread() {
+                public void run() {
+                    try {
+                        mUser = mCallback.getUser().get();
+                        if (mUser.hasAttribute("activeDriverReservations")) {
+                            mReservationId = parseReservationId(mUser);
+                            // Determine the state of the reservation.
+                            Reservation reservation = mCallback.getReservation(mReservationId).get();
+                            if ("navigating".equals(reservation.getAttribute("status"))) {
+                                mState = DriverHomeFragment.State.ARRIVE_SPOT;
+                            } else {
+                                mState = DriverHomeFragment.State.OCCUPY_SPOT;
+                            }
                         } else {
-                            mState = DriverHomeFragment.State.OCCUPY_SPOT;
+                            mState = DriverHomeFragment.State.FIND_SPOT;
                         }
-                    } else {
-                        mState = DriverHomeFragment.State.FIND_SPOT;
-                    }
 
-                    stateSetLatch.countDown();
-                } catch(Exception e) {
-                    Log.w(TAG, e.getMessage());
+                        stateSetLatch.countDown();
+                    } catch (Exception e) {
+                        Log.w(TAG, e.getMessage());
+                    }
                 }
-            }
-        };
-        initializeUser.start();
+            };
+            initializeUser.start();
+        } else {
+            stateSetLatch.countDown();
+        }
     }
 
     private String parseReservationId(User user) {
