@@ -189,6 +189,13 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         savedInstanceState.putSerializable("state", mState);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        setOverlayFragment();
+    }
+
     public void setOverlayFragment() {
         Fragment fragment = null;
         Bundle args = new Bundle();
@@ -216,7 +223,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 fragment = new DriverEndReservationFragment();
                 break;
         }
-        getChildFragmentManager().beginTransaction().add(R.id.driver_fragment_container, fragment).commit();
+        getChildFragmentManager().beginTransaction().replace(R.id.driver_fragment_container, fragment).commit();
     }
 
     public void setLocation(Location location) {
@@ -258,7 +265,16 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             Log.w(TAG, "No start marker!");
             return;
         }
+        mStartMarker.remove();
         zoomCameraToDestinationMarker();;
+    }
+
+    public void removeEndMarker() {
+        if (mDestMarker == null) {
+            Log.w(TAG, "No start marker!");
+            return;
+        }
+        mDestMarker.remove();
     }
 
     private void zoomCameraToMarkers(List<Marker> markers) {

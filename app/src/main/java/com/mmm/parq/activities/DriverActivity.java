@@ -66,6 +66,7 @@ public class DriverActivity extends FragmentActivity implements
     private RequestQueue mQueue;
     private Reservation mReservation;
     private Spot mSpot;
+    private DriverHomeFragment.State mState;
     private TextView mNameView;
     private User mUser;
     private Location mUserLocation;
@@ -237,6 +238,15 @@ public class DriverActivity extends FragmentActivity implements
     }
 
     @Override
+    public void removeEndMarker() {
+        try {
+            ( (DriverHomeFragment) mFragment).removeEndMarker();
+        } catch (ClassCastException e) {
+            Log.d("DriverActivity", "Invalid Fragment");
+        }
+    }
+
+    @Override
     public void addDestinationMarker(LatLong latLong) {
         ((DriverHomeFragment) mFragment).addDestinationMarker(latLong);
     }
@@ -262,8 +272,14 @@ public class DriverActivity extends FragmentActivity implements
     public void setState(DriverHomeFragment.State state) {
         try {
             DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
+            mState = state;
             driverHomeFrag.setState(state);
         } catch(ClassCastException e) {}
+    }
+
+    @Override
+    public DriverHomeFragment.State getState() {
+        return mState;
     }
 
     // Implementing HasReservation Interface
