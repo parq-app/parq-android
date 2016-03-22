@@ -17,6 +17,7 @@ import com.android.volley.toolbox.Volley;
 import com.firebase.client.Firebase;
 import com.mmm.parq.R;
 import com.mmm.parq.adapters.SpotAdapter;
+import com.mmm.parq.utils.HttpClient;
 
 import org.json.JSONArray;
 
@@ -47,7 +48,7 @@ public class HostActivity extends AppCompatActivity {
         super.onStart();
 
         Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
-        RequestQueue queue = Volley.newRequestQueue(this);
+        RequestQueue queue = HttpClient.getInstance(getApplicationContext()).getRequestQueue();
         String url = getString(R.string.api_address) + "/users/" + firebaseRef.getAuth().getUid() + "/spots";
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(url, new Response.Listener<JSONArray>() {
             @Override

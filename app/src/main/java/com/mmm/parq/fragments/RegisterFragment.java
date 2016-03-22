@@ -30,6 +30,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
+import com.mmm.parq.utils.HttpClient;
 
 import org.json.JSONObject;
 
@@ -87,7 +88,8 @@ public class RegisterFragment extends Fragment {
 
         if (attemptSubmit(email, password)) {
             //TODO(mrgrossm): make async request to /user
-            RequestQueue queue = Volley.newRequestQueue(getActivity());
+            RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+
             String url = getString(R.string.api_address) + "/users";
             JSONObject creds = new JSONObject();
             try {
