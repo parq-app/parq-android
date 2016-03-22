@@ -85,11 +85,9 @@ public class DriverActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver);
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        myToolbar.setTitle("Parq");
-        myToolbar.setTitleTextColor(getResources().getColor(android.R.color.primary_text_dark));
-        setSupportActionBar(myToolbar);
-        myToolbar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         final android.support.v7.app.ActionBar ab = getSupportActionBar();
         ab.setDisplayShowTitleEnabled(false);
@@ -131,7 +129,7 @@ public class DriverActivity extends AppCompatActivity implements
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, myToolbar,
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar,
                 R.string.settings, R.string.settings) {
 
             /** Called when a drawer has settled in a completely closed state. */
@@ -153,6 +151,14 @@ public class DriverActivity extends AppCompatActivity implements
         // Set the user's name in the nav drawer.
         mNameView = (TextView) view.getHeaderView(0).findViewById(R.id.name);
         setUserName();
+
+        // Set listener for launching profile page
+        view.getHeaderView(0).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override

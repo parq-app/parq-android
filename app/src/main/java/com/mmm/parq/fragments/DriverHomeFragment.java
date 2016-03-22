@@ -196,8 +196,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public void onStart() {
         super.onStart();
 
-        Log.d(TAG, "in HomeFragment onStart");
-
         if (mState != null) {
           setOverlayFragment();
         }
