@@ -1,18 +1,22 @@
 package com.mmm.parq.activities;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -52,7 +56,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-public class DriverActivity extends FragmentActivity implements
+public class DriverActivity extends AppCompatActivity implements
         HasLocation,
         HasUser,
         DriverFindSpotFragment.HostsDriverFindSpotFragment,
@@ -61,6 +65,7 @@ public class DriverActivity extends FragmentActivity implements
         DriverHomeFragment.OnLocationReceivedListener,
         DriverEndReservationFragment.OnChangeFragmentListener,
         DriverArriveSpotFragment.ArriveSpotListener {
+    private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
     private Fragment mFragment;
@@ -78,10 +83,19 @@ public class DriverActivity extends FragmentActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_driver);
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        myToolbar.setTitle("Parq");
+        myToolbar.setTitleTextColor(getResources().getColor(android.R.color.primary_text_dark));
+        setSupportActionBar(myToolbar);
+        myToolbar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+
+        final android.support.v7.app.ActionBar ab = getSupportActionBar();
+        ab.setDisplayShowTitleEnabled(false);
 
         mQueue = HttpClient.getInstance(getApplicationContext()).getRequestQueue();
         mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
-
         if (mFirebaseRef.getAuth() == null) {
             redirectToLogin();
         }
@@ -94,7 +108,6 @@ public class DriverActivity extends FragmentActivity implements
                 }
             }
         });
-        setContentView(R.layout.activity_driver);
 
         // Set initial fragment as home fragment.
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -117,6 +130,25 @@ public class DriverActivity extends FragmentActivity implements
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, myToolbar,
+                R.string.settings, R.string.settings) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         // Set the user's name in the nav drawer.
         mNameView = (TextView) view.getHeaderView(0).findViewById(R.id.name);
@@ -163,6 +195,18 @@ public class DriverActivity extends FragmentActivity implements
                 return true;
             }
         });
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
