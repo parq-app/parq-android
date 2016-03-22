@@ -25,21 +25,14 @@ public class SpotAdapter extends BaseAdapter {
         mSpotsArray = spotsArray;
     }
 
-    public int getCount() {
-                        return mSpotsArray.length();
-                                                                }
+    public int getCount() { return mSpotsArray.length(); }
 
-    public Object getItem(int position) {
-                                      return null;
-                                                                            }
+    public Object getItem(int position) { return null; }
 
-    public long getItemId(int position) {
-                                      return 0;
-                                                                         }
+    public long getItemId(int position) { return 0; }
 
     // create a new TextView for each item referenced by the Adapter
     public View getView(int position, View convertView, ViewGroup parent) {
-
         View hostSpotView;
         if (convertView == null) {
             // if it's not recycled, initialize some attributes
@@ -56,7 +49,7 @@ public class SpotAdapter extends BaseAdapter {
             TextView textView = (TextView) hostSpotView.findViewById(R.id.host_spot_item);
             textView.setText(title);
         } catch (JSONException e) {
-            Log.e(TAG, "Error parsing spots array");
+            Log.e(TAG, "Error parsing spots array" + e);
         }
         return hostSpotView;
     }
