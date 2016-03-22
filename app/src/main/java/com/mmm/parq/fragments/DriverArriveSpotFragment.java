@@ -15,6 +15,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.google.gson.Gson;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
@@ -23,11 +24,16 @@ import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.HttpClient;
 
+import java.util.concurrent.CountDownLatch;
+
 public class DriverArriveSpotFragment extends Fragment {
     private Button mArriveSpotButton;
+    private CountDownLatch reservationUpdatedLatch = new CountDownLatch(1);
     private Reservation mReservation;
     private Spot mSpot;
     private ArriveSpotListener mCallback;
+
+    private static final String TAG = DriverArriveSpotFragment.class.getSimpleName();
 
     public interface ArriveSpotListener extends HasReservation, HasSpot, NeedsState {
     }
@@ -80,20 +86,35 @@ public class DriverArriveSpotFragment extends Fragment {
     private void arriveSpot() {
         // Occupy the spot
         if (getArguments() != null) {
+            // If the app is resuming in this state, the spot is already occupied on the server.
             boolean alreadyOccupied = getArguments().getBoolean("occupied");
             if (!alreadyOccupied) {
                 occupySpot();
+            } else {
+                reservationUpdatedLatch.countDown();
             }
         } else {
             occupySpot();
         }
 
-        mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
-        DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
-        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
+        Thread switchToOccupiedSpot = new Thread() {
+            public void run() {
+                // Don't switch to the next fragment until after the reservation is updated in occupySpot
+                try {
+                    reservationUpdatedLatch.await();
+                } catch (InterruptedException e) {
+                    Log.w(TAG, e.getMessage());
+                }
+
+                mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
+                DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
+                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
+            }
+        };
+        switchToOccupiedSpot.start();
     }
 
     private void occupySpot() {
@@ -101,6 +122,16 @@ public class DriverArriveSpotFragment extends Fragment {
         StringRequest occupyRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                // Occupying the spot updates the reservation. Parse it and set it as the current reservation.
+                Gson gson = new Gson();
+                Reservation updatedReservation = gson.fromJson(response, Reservation.class);
+                mCallback.updateReservation(updatedReservation);
+                try {
+                    mReservation = mCallback.getReservation(updatedReservation.getId()).get();
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+                reservationUpdatedLatch.countDown();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -112,5 +143,6 @@ public class DriverArriveSpotFragment extends Fragment {
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(occupyRequest);
     }
+
 
 }

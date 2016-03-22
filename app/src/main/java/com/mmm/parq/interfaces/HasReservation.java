@@ -6,4 +6,5 @@ import java.util.concurrent.FutureTask;
 
 public interface HasReservation {
     FutureTask<Reservation> getReservation(String spotId);
+    void updateReservation(Reservation reservation);
 }

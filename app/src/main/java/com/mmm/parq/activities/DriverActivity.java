@@ -292,6 +292,11 @@ public class DriverActivity extends FragmentActivity implements
         return ft;
     }
 
+    @Override
+    public void updateReservation(Reservation reservation) {
+        mReservation = reservation;
+    }
+
     private class GetReservation implements Callable<Reservation> {
         private String mReservationId;
 
