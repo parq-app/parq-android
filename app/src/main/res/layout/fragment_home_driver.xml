@@ -12,8 +12,9 @@
         android:layout_height="match_parent"
         tools:context=".activities.DriverActivity" />
     <RelativeLayout
+        android:layout_alignParentBottom="true"
         android:id="@+id/driver_fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
     </RelativeLayout>
 </RelativeLayout>

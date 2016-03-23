@@ -280,6 +280,15 @@ public class DriverActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void centerMapOnLocation() {
+        try {
+            ( (DriverHomeFragment) mFragment).centerMapOnLocation();
+        } catch (ClassCastException e) {
+            Log.d("DriverActivity", "Invalid Fragment");
+        }
+    }
+
+    @Override
     public void clearMap() {
         try {
             ( (DriverHomeFragment) mFragment).removePath();
