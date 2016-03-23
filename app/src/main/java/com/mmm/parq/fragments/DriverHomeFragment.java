@@ -145,6 +145,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mMap = googleMap;
 
         mMap.setOnMyLocationButtonClickListener(this);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         enableMyLocation();
 
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
@@ -195,8 +196,6 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public void onStart() {
         super.onStart();
-
-        Log.d(TAG, "in HomeFragment onStart");
 
         if (mState != null) {
           setOverlayFragment();
@@ -315,6 +314,21 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public void addDestinationMarker(LatLong latLong) {
         // Add the spot's location to the map
         mDestMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(latLong.getLat(), latLong.getLon())));
+    }
+
+    public void centerMapOnLocation() {
+        try {
+            // Update current location
+            LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+            String locationProvider = LocationManager.NETWORK_PROVIDER;
+            mLastLocation = locationManager.getLastKnownLocation(locationProvider);
+        } catch (SecurityException e) {
+            Log.w(TAG, "Don't have permission to access location.");
+        }
+
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
+                LatLng(mLastLocation.getLatitude(),
+                mLastLocation.getLongitude()), 15));
     }
 
     /*

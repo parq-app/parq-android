@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
@@ -16,6 +17,7 @@ import com.mmm.parq.interfaces.NeedsState;
 
 public class DriverFindSpotFragment extends Fragment {
     private Button mFindParkingButton;
+    private ImageButton mLocationButton;
     private HostsDriverFindSpotFragment mCallback;
 
     public DriverFindSpotFragment() {}
@@ -31,6 +33,15 @@ public class DriverFindSpotFragment extends Fragment {
         // Clear the map
         mCallback.clearMap();
         mCallback.removeEndMarker();
+
+        // Wire up location button
+        mLocationButton = (ImageButton) view.findViewById(R.id.center_location_button);
+        mLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCallback.centerMapOnLocation();
+            }
+        });
 
         mFindParkingButton = (Button) view.findViewById(R.id.findparkingbutton);
         mFindParkingButton.setOnClickListener(new View.OnClickListener() {
@@ -53,7 +64,6 @@ public class DriverFindSpotFragment extends Fragment {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
     }
-
 
     private void reserveSpot() {
         // Start the navigation fragment.
