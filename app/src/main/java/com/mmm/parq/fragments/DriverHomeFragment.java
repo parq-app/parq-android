@@ -41,9 +41,9 @@ import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasUser;
-import com.mmm.parq.interfaces.NeedsLocation;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.User;
+import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
 
 import java.util.ArrayList;
@@ -53,9 +53,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
-                                                            GoogleMap.OnMyLocationButtonClickListener,
-                                                            NeedsLocation {
-    private CountDownLatch childFragmentInitializedLatch = new CountDownLatch(1);
+                                                            GoogleMap.OnMyLocationButtonClickListener {
     private CountDownLatch stateSetLatch = new CountDownLatch(1);
     private Location mLastLocation;
     private GoogleMap mMap;
@@ -71,11 +69,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     static private final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
     static private final int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private final int LINE_WIDTH = 20;
-    static private final int MAPS_REQUEST_CODE = 1;
     static private final int ZOOM_LEVEL = 16;
 
     private static final String TAG = DriverHomeFragment.class.getSimpleName();
-    private static String CLASS = "DriverHomeFragment";
 
     public enum State {
         FIND_SPOT, NAVIGATION, ARRIVE_SPOT, OCCUPY_SPOT, END_RESERVATION
@@ -85,6 +81,11 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public DriverHomeFragment() {}
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -116,26 +117,12 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 } catch (InterruptedException e) {
                     Log.w(TAG, e);
                 }
+
+
                 setOverlayFragment();
             }
         };
         stateThread.start();
-
-        // Watch for when the child fragment is actually initialized & notify people who care
-
-        // TODO(kenzshelley) This is a shitty way to handle this. The problem is that the child fragment
-        // isn't actually initialized immediately after calling 'commit()'. As a result, you have to
-        // look for when it's no longer null.
-        Thread childFragmentInitializedThread = new Thread() {
-            public void run() {
-                while(getChildFragmentManager().findFragmentById(R.id.driver_fragment_container) == null) {
-                   // do nothing
-                }
-                // Down the latch after the child fragment has been initialized.
-                childFragmentInitializedLatch.countDown();
-            }
-        };
-        childFragmentInitializedThread.start();
 
         return view;
     }
@@ -144,6 +131,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        mMap.setPadding(0, ConversionUtils.dpToPx(getActivity(), 48), 0, 0);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         enableMyLocation();
@@ -198,7 +186,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         super.onStart();
 
         if (mState != null) {
-          setOverlayFragment();
+            setOverlayFragment();
         }
     }
 
@@ -229,11 +217,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 fragment = new DriverEndReservationFragment();
                 break;
         }
-        getChildFragmentManager().beginTransaction().replace(R.id.driver_fragment_container, fragment).commit();
-    }
 
-    public void setLocation(Location location) {
-        mLastLocation = location;
+        getChildFragmentManager().beginTransaction().
+                replace(R.id.driver_fragment_container, fragment).commitAllowingStateLoss();
     }
 
     public void setState(State state) {
@@ -260,7 +246,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
 
     public void removePath() {
         if (mDirectionsPath == null) {
-            Log.w(CLASS, "No path to remove!");
+            Log.w(TAG, "No path to remove!");
             return;
         }
         mDirectionsPath.remove();
@@ -299,14 +285,14 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         }
         LatLngBounds bounds = builder.build();
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 150);
-        mMap.setPadding(0, 0, 0, size.y / 2);
+        mMap.setPadding(0, ConversionUtils.dpToPx(getActivity(), 48), 0, size.y / 2);
         mMap.animateCamera(cameraUpdate);
     }
 
     public void zoomCameraToDestinationMarker() {
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(mDestMarker.getPosition())
-                .zoom(15)
+                .zoom(ZOOM_LEVEL)
                 .build();
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
@@ -346,23 +332,31 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 public void run() {
                     try {
                         mUser = mCallback.getUser().get();
-                        if (mUser.hasAttribute("activeDriverReservations")) {
-                            mReservationId = parseReservationId(mUser);
-                            // Determine the state of the reservation.
-                            Reservation reservation = mCallback.getReservation(mReservationId).get();
-                            if ("navigating".equals(reservation.getAttribute("status"))) {
-                                mState = DriverHomeFragment.State.ARRIVE_SPOT;
-                            } else {
-                                mState = DriverHomeFragment.State.OCCUPY_SPOT;
-                            }
-                        } else {
-                            mState = DriverHomeFragment.State.FIND_SPOT;
-                        }
-
-                        stateSetLatch.countDown();
                     } catch (Exception e) {
                         Log.w(TAG, e.getMessage());
+                        return;
                     }
+
+                    if (mUser.hasAttribute("activeDriverReservations")) {
+                        mReservationId = parseReservationId(mUser);
+                        // Determine the state of the reservation.
+                        Reservation reservation = null;
+                        try {
+                             reservation = mCallback.getReservation(mReservationId).get();
+                        } catch (Exception e) {
+                            Log.w(TAG, "Error retrieving reservation: " + e.getMessage());
+                            return;
+                        }
+                        if ("navigating".equals(reservation.getAttribute("status"))) {
+                            mState = DriverHomeFragment.State.ARRIVE_SPOT;
+                        } else {
+                            mState = DriverHomeFragment.State.OCCUPY_SPOT;
+                        }
+                    } else {
+                        mState = DriverHomeFragment.State.FIND_SPOT;
+                    }
+
+                    stateSetLatch.countDown();
                 }
             };
             initializeUser.start();
@@ -386,6 +380,18 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         return reservationId;
     }
 
+    public Location getLocation() {
+        LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        String locationProvider = LocationManager.NETWORK_PROVIDER;
+        Location location = null;
+        try {
+            location = locationManager.getLastKnownLocation(locationProvider);
+        } catch (SecurityException e) {
+            Log.e(TAG, "User has not granted location permission");
+        }
+        return location;
+    }
+
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -400,25 +406,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         } else if (mMap != null) {
             // Access to the location has been granted to the app.
             mMap.setMyLocationEnabled(true);
-            LocationManager locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-            String locationProvider = LocationManager.NETWORK_PROVIDER;
-            mLastLocation = locationManager.getLastKnownLocation(locationProvider);
-
-            // Wait to setLocation until mState has been set and the corresponding fragments have
-            // been initialized. When the activity set's the location it notifies any fragments that
-            // require the location. Thus, this shouldn't happen until after those fragments are created.
-            Thread locationThread = new Thread() {
-                public void run() {
-                    try {
-                        childFragmentInitializedLatch.await();
-                    } catch(InterruptedException e ) {
-                        Log.w(TAG, e.toString());
-                    }
-
-                    mCallback.setLocation(mLastLocation);
-                }
-            };
-            locationThread.start();
+            mLastLocation = getLocation();
+            mCallback.setLocation(mLastLocation);
         }
     }
 }

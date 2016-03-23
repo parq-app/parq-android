@@ -43,7 +43,6 @@ import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasUser;
-import com.mmm.parq.interfaces.NeedsLocation;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.models.User;
@@ -275,7 +274,7 @@ public class DriverActivity extends AppCompatActivity implements
         try {
             ( (DriverHomeFragment) mFragment).addPath(path, spotLocation);
         } catch (ClassCastException e) {
-            Log.d("DriverActivity", "Invalid Fragment");
+            Log.w("DriverActivity", "Invalid Fragment");
         }
     }
 
@@ -284,7 +283,7 @@ public class DriverActivity extends AppCompatActivity implements
         try {
             ( (DriverHomeFragment) mFragment).centerMapOnLocation();
         } catch (ClassCastException e) {
-            Log.d("DriverActivity", "Invalid Fragment");
+            Log.w("DriverActivity", "Invalid Fragment");
         }
     }
 
@@ -294,7 +293,7 @@ public class DriverActivity extends AppCompatActivity implements
             ( (DriverHomeFragment) mFragment).removePath();
             ( (DriverHomeFragment) mFragment).removeStartMarker();
         } catch (ClassCastException e) {
-            Log.d("DriverActivity", "Invalid Fragment");
+            Log.w("DriverActivity", "Invalid Fragment");
         }
     }
 
@@ -303,7 +302,7 @@ public class DriverActivity extends AppCompatActivity implements
         try {
             ( (DriverHomeFragment) mFragment).removeEndMarker();
         } catch (ClassCastException e) {
-            Log.d("DriverActivity", "Invalid Fragment");
+            Log.w("DriverActivity", "Invalid Fragment");
         }
     }
 
@@ -321,12 +320,15 @@ public class DriverActivity extends AppCompatActivity implements
     @Override
     public void setLocation(Location location) {
         mUserLocation = location;
-        shareLocation();
     }
 
     @Override
     public Location getLocation() {
-        return mUserLocation;
+        try {
+            DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
+            return driverHomeFrag.getLocation();
+        } catch(ClassCastException e) {}
+        return null;
     }
 
     @Override
@@ -529,32 +531,31 @@ public class DriverActivity extends AppCompatActivity implements
         finish();
     }
 
-    // Shares the user's current location with the current overlay fragment.
-    private void shareLocation() {
-        // Attempt to cast the fragment to a fragment that requires the current location.
-        try {
-            DriverHomeFragment driverHomeFrag = ((DriverHomeFragment) mFragment);
-            Fragment childFragment = driverHomeFrag.getChildFragmentManager().
-                    findFragmentById(R.id.driver_fragment_container);
-            ((NeedsLocation)childFragment).setLocation(mUserLocation);
-        } catch(ClassCastException e) {}
-    }
-
     private void setUserName() {
         Thread initializeUser = new Thread() {
             public void run() {
                 try {
                     mUser = getUser().get();
-                    String firstName = "No";
-                    String lastName = "Name";
-                    if (mUser.hasAttribute("firstName") && mUser.hasAttribute("lastName")) {
-                        firstName = mUser.getAttribute("firstName");
-                        lastName = mUser.getAttribute("lastName");
-                    }
-                    mNameView.setText(String.format("%s %s", firstName, lastName));
+                    if (mUser == null) redirectToLogin();
                 } catch (Exception e) {
-                    Log.w(TAG, e.getMessage());
+                    Log.w(TAG, "Error initializing user: " + e.getMessage());
                 }
+
+                String firstName = "No";
+                String lastName = "Name";
+                if (mUser.hasAttribute("firstName") && mUser.hasAttribute("lastName")) {
+                    firstName = mUser.getAttribute("firstName");
+                    lastName = mUser.getAttribute("lastName");
+                }
+                final String finalFirstName = firstName;
+                final String finalLastName = lastName;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mNameView.setText(String.format("%s %s", finalFirstName, finalLastName));
+                    }
+                });
             }
         };
         initializeUser.start();
