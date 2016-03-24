@@ -26,6 +26,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.DriverActivity;
 import com.mmm.parq.exceptions.RouteNotFoundException;
+import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
 import com.mmm.parq.interfaces.MapController;
@@ -48,7 +49,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-public class DriverNavigationFragment extends Fragment implements NeedsLocation {
+public class DriverNavigationFragment extends Fragment {
     private Boolean mIsTransitioning;
     private Button mNavigationButton;
     private Directions mDirections;
@@ -71,7 +72,7 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
     static private String TAG = DriverNavigationFragment.class.getSimpleName();
 
     public interface OnDirectionsRequestedListener extends MapController, HasSpot,
-            HasReservation, NeedsState {
+            HasReservation, NeedsState, HasLocation {
     }
 
     public DriverNavigationFragment() {}
@@ -82,9 +83,10 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
         View view = inflater.inflate(R.layout.fragment_navigation_driver, container,
                 false);
 
+        mIsTransitioning = false;
         mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.navigation_layout);
-        mLocation = ((DriverActivity) getActivity()).getLocation();
+        mLocation = mCallback.getLocation();
         if (mLocation != null) {
             locationSetLatch.countDown();
         }
@@ -183,11 +185,6 @@ public class DriverNavigationFragment extends Fragment implements NeedsLocation 
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(leaveRequest);
-    }
-
-    public void setLocation(Location location) {
-        mLocation = location;
-        locationSetLatch.countDown();
     }
 
     private void startNavigation() {
