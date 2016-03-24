@@ -3,6 +3,8 @@ package com.mmm.parq.fragments;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,14 +29,27 @@ public class HostHomeFragment extends Fragment {
 
     private final static String TAG = HostHomeFragment.class.getSimpleName();
 
+    private Toolbar mToolbar;
+    private FloatingActionButton mFab;
     private GridView mHostSpotsGrid;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_home, container, false);
 
-        FloatingActionButton fab = (FloatingActionButton) v.findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        mToolbar = (Toolbar) v.findViewById(R.id.host_home_toolbar);
+        mToolbar.setTitle("Your Spots");
+        mToolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().finish();
+            }
+        });
+
+        mFab = (FloatingActionButton) v.findViewById(R.id.new_spot_fab);
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Fragment newSpotFragment = new HostNewSpotFragment();

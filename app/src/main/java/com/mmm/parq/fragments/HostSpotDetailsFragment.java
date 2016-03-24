@@ -2,11 +2,12 @@ package com.mmm.parq.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -27,12 +28,12 @@ public class HostSpotDetailsFragment extends Fragment {
     private static final String ARG_SPOT_ID = "spotId";
 
     private String mSpotId;
+    private Toolbar mToolbar;
     private TextView mSpotAddr;
     private TextView mSpotTitle;
     private RatingBar mSpotRating;
     private TextView mSpotNumRatings;
     private TextView mSpotIsReserved;
-    private Button mBackHome;
 
     public static HostSpotDetailsFragment newInstance(String spotId) {
         HostSpotDetailsFragment fragment = new HostSpotDetailsFragment();
@@ -60,8 +61,11 @@ public class HostSpotDetailsFragment extends Fragment {
         mSpotNumRatings = (TextView) v.findViewById(R.id.details_spot_num_ratings);
         mSpotIsReserved = (TextView) v.findViewById(R.id.details_spot_reserved);
 
-        mBackHome = (Button) v.findViewById(R.id.back_home_button);
-        mBackHome.setOnClickListener(new View.OnClickListener() {
+        mToolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
+        mToolbar.setTitle("Spot Details");
+        mToolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Fragment homeFragment = new HostHomeFragment();
@@ -81,8 +85,15 @@ public class HostSpotDetailsFragment extends Fragment {
                     mSpotTitle.setText(attrs.getString("title"));
                     mSpotAddr.setText(attrs.getString("addr"));
                     mSpotRating.setRating((float) attrs.getDouble("rating"));
-                    mSpotNumRatings.setText(attrs.getString("numRatings"));
-                    mSpotIsReserved.setText(attrs.getString("isReserved"));
+                    mSpotNumRatings.setText(String.format(getString(R.string.num_ratings), attrs.getInt("numRatings")));
+                    if (attrs.getBoolean("isReserved")) {
+                        mSpotIsReserved.setText("Occupied");
+                        mSpotIsReserved.setBackgroundColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.occupiedPurple));
+                    }
+                    else {
+                        mSpotIsReserved.setText("Vacant");
+                        mSpotIsReserved.setBackgroundColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.vacantGreen));
+                    }
                 } catch (JSONException e) {
                     Log.e(TAG, "Error while parsing spot attributes: " + e);
                 }

@@ -55,4 +55,7 @@
     <string name="title">title</string>
     <string name="action_upload_spot">Upload Spot</string>
 
+    <!--Spot Detail Strings-->
+    <string name="num_ratings">Number of Ratings: %d</string>
+
 </resources>

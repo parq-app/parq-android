@@ -1,42 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent" >
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
-    <TextView
-        android:id="@+id/details_spot_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.mmm.parq.fragments.HostSpotDetailsFragment" >
 
-    <TextView
-        android:id="@+id/details_spot_addr"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/spot_details_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary" />
 
-    <RatingBar
-        android:id="@+id/details_spot_rating"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:isIndicator="true"
-        android:numStars="5"
-        android:rating="0"
-        android:stepSize="0.1" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:contentDescription="Spot Picture"
+            android:src="@drawable/pretty_spot_380_90" />
 
-    <TextView
-        android:id="@+id/details_spot_num_ratings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/details_spot_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:textSize="22sp"
+            android:textColor="@color/black"
+            tools:text="Spot Title" />
+
+        <TextView
+            android:id="@+id/details_spot_addr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            tools:text="Spot Address" />
+
+        <View
+            android:layout_height="1dp"
+            android:layout_width="match_parent"
+            android:background="#90909090"
+            android:layout_marginBottom="15dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp" />
+
+        <RatingBar
+            android:id="@+id/details_spot_rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:isIndicator="true"
+            android:numStars="5"
+            android:rating="0"
+            android:stepSize="0.1" />
+
+        <TextView
+            android:id="@+id/details_spot_num_ratings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Number of Ratings: X" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/details_spot_reserved"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_width="160dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:text="Status" />
 
-    <Button
-        android:id="@+id/back_home_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Back" />
-
-</LinearLayout>
+</FrameLayout>
