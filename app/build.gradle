@@ -48,5 +48,8 @@ android {
     }
 }
 dependencies {
+    compile 'com.android.support:support-v4:23.+'
+}
+dependencies {
     compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }

@@ -1,21 +1,12 @@
-package com.mmm.parq.activities;
+package com.mmm.parq.fragments;
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.text.Html;
+import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.android.volley.Request;
@@ -23,7 +14,6 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.firebase.client.Firebase;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -32,53 +22,42 @@ import com.mmm.parq.utils.HttpClient;
 
 import org.json.JSONObject;
 
-public class HostNewSpotActivity extends AppCompatActivity {
+public class HostNewSpotFragment extends Fragment {
 
-    private static final String TAG = HostNewSpotActivity.class.getSimpleName();
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
+    private static final String TAG = HostNewSpotFragment.class.getSimpleName();
+
     private GoogleApiClient mClient;
-    private EditText mAddressField;
     private EditText mTitleField;
+    private EditText mAddressField;
+    private Button mListSpot;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_host_new_spot);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        mAddressField = (EditText) findViewById(R.id.new_spot_address);
-        mTitleField = (EditText) findViewById(R.id.new_spot_title);
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        mClient = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        mClient = new GoogleApiClient.Builder(getActivity().getApplicationContext()).addApi(AppIndex.API).build();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_finish:
-                Log.i(TAG, "clicked finish");
-                String address = mAddressField.getText().toString();
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_host_new_spot, container, false);
+
+        mTitleField = (EditText) v.findViewById(R.id.new_spot_title);
+        mAddressField = (EditText) v.findViewById(R.id.new_spot_address);
+
+        mListSpot = (Button) v.findViewById(R.id.list_spot_button);
+        mListSpot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 String title = mTitleField.getText().toString();
+                String address = mAddressField.getText().toString();
                 uploadSpot(address, title);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+            }
+        });
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.host_new_spot_menu, menu);
-        return true;
+        return v;
     }
 
     private void uploadSpot(String address, String title) {
-        RequestQueue queue = HttpClient.getInstance(getApplicationContext()).getRequestQueue();
         String url = String.format("%s/%s", getString(R.string.api_address), getString(R.string.spots_endpoint));
         JSONObject data = new JSONObject();
         try {
@@ -100,12 +79,16 @@ public class HostNewSpotActivity extends AppCompatActivity {
             data.put("addr", address);
             data.put("title", title);
         } catch (Exception e) {
-            Log.e(TAG, "error with json");
+            Log.e(TAG, "error with json" + e);
         }
+
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, data.toString(), new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                finish();
+                Fragment homeFragment = new HostHomeFragment();
+                HostNewSpotFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.host_fragment_container, homeFragment)
+                        .commit();
             }
         }, new Response.ErrorListener() {
             @Override
@@ -113,6 +96,8 @@ public class HostNewSpotActivity extends AppCompatActivity {
                 Log.e(TAG, "Network volley error: " + error.toString());
             }
         });
+
+        final RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(jsonObjectRequest);
     }
 }
