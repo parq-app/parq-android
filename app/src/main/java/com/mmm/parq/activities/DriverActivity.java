@@ -62,7 +62,7 @@ public class DriverActivity extends AppCompatActivity implements
         DriverAcceptFragment.OnDirectionsRequestedListener,
         DriverFinishFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
-        DriverReviewFragment.OnChangeFragmentListener,
+        DriverReviewFragment.HostsDriverReviewFragment,
         DriverOccupyFragment.ArriveSpotListener {
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -248,12 +248,13 @@ public class DriverActivity extends AppCompatActivity implements
 
     // Implementing OnNavigationCompletedListener Interface
     @Override
-    public void showEndReservationFragment(double cost) {
+    public void showReviewFragment() {
             DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
             FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+
             // TODO(kenzshelley) Remove this once Reservations include cost themselves.
             Bundle args = new Bundle();
-            args.putDouble("cost", cost);
+            args.putString("reservationId", mReservation.getId());
             driverReviewFragment.setArguments(args);
 
             fragmentTransaction.replace(R.id.container, driverReviewFragment);

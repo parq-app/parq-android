@@ -42,7 +42,7 @@ public class DriverFinishFragment extends Fragment {
 
     public interface OnNavigationCompletedListener extends MapController,
             HasSpot, HasReservation {
-        void showEndReservationFragment(double cost);
+        void showReviewFragment();
     }
 
     public DriverFinishFragment() {}
@@ -97,9 +97,9 @@ public class DriverFinishFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 // Free the spot
-                leaveSpot();
+                finishReservation();
 
-                mCallback.showEndReservationFragment(mOccupiedSpotCardView.getCurrentCost());
+                mCallback.showReviewFragment();
             }
         });
 
@@ -117,7 +117,7 @@ public class DriverFinishFragment extends Fragment {
         }
     }
 
-    private void leaveSpot() {
+    private void finishReservation() {
         String url = String.format("%s/reservations/%s/finish", getString(R.string.api_address), mReservation.getId());
         StringRequest leaveRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override

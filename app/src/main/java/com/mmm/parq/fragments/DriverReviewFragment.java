@@ -18,8 +18,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.mmm.parq.R;
-import com.mmm.parq.activities.DriverActivity;
+import com.mmm.parq.interfaces.HasReservation;
+import com.mmm.parq.interfaces.HasSpot;
 import com.mmm.parq.interfaces.NeedsState;
+import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.HttpClient;
 
@@ -28,14 +30,19 @@ import java.util.Map;
 
 public class DriverReviewFragment extends Fragment {
     private Button mSubmitButton;
+    private Double mCost;
     private EditText mComment;
-    private OnChangeFragmentListener mCallback;
+    private HostsDriverReviewFragment mCallback;
     private RatingBar mRatingBar;
+    private Reservation mReservation;
     private Spot mSpot;
+    private String mReservationId;
     private TextView mAddress;
-    private TextView mCost;
+    private TextView mCostView;
 
-    public interface OnChangeFragmentListener extends NeedsState {
+    private static final String TAG = DriverReviewFragment.class.getSimpleName();
+
+    public interface HostsDriverReviewFragment extends NeedsState, HasReservation, HasSpot {
         void setFragment(Fragment fragment);
     }
 
@@ -46,28 +53,47 @@ public class DriverReviewFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_review_driver, container, false);
 
+        if (getArguments() == null) {
+            Log.e(TAG, "Missing required arguments for fragment.");
+        } else {
+            mReservationId = getArguments().getString("reservationId");
+            mCost = getArguments().getDouble("cost");
+        }
+
         mAddress = (TextView) view.findViewById(R.id.spot_addr);
-        mCost = (TextView) view.findViewById(R.id.cost);
-        mSpot = ((DriverActivity)getActivity()).getSpot();
+        mCostView = (TextView) view.findViewById(R.id.cost);
         mRatingBar = (RatingBar) view.findViewById(R.id.rating_bar);
         mComment = (EditText) view.findViewById(R.id.rating_comment);
         mSubmitButton = (Button) view.findViewById(R.id.submit_rating_button);
 
-        Double cost = null;
-        if (getArguments() != null) {
-            cost = getArguments().getDouble("cost");
-        }
-        mCost.setText(String.format("$%.2f", cost));
+        Thread fetchData = new Thread() {
+            public void run() {
+                try {
+                    mReservation = mCallback.getReservation(mReservationId).get();
+                    mSpot = mCallback.getSpot(mReservation.getAttribute("spotId")).get();
 
-        mAddress.setText(mSpot.getAttribute("addr"));
+                    double rate = Double.parseDouble(mSpot.getAttribute("cost"));
+                    double startTime = Double.parseDouble(mReservation.getAttribute("timeStart"));
+                    double endTime = Double.parseDouble(mReservation.getAttribute("timeEnd"));
+                    mCost = calculateCost(rate, startTime, endTime);
 
-        mSubmitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                submitRating(mRatingBar.getRating(), mComment.getText().toString());
-                startFindSpotFragment();
+                    mCostView.setText(String.format("$%.2f", mCost));
+                    mAddress.setText(mSpot.getAttribute("addr"));
+
+                    // TODO(kenzshelley) Unclear if setting a click listener from inside a thread is an okay thing to do
+                    mSubmitButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            submitRating(mRatingBar.getRating(), mComment.getText().toString());
+                            startFindSpotFragment();
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "Error fetching resources: " + e.getMessage());
+                }
             }
-        });
+        };
+        fetchData.start();
 
         return view;
     }
@@ -77,10 +103,17 @@ public class DriverReviewFragment extends Fragment {
         super.onAttach(activity);
 
         try {
-            mCallback = (OnChangeFragmentListener) activity;
+            mCallback = (HostsDriverReviewFragment) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
+    }
+
+    private double calculateCost(double rate, double startTimeInMillis, double endTimeInMillis) {
+        double diffInMillis = endTimeInMillis - startTimeInMillis;
+        double  diffInHours = (diffInMillis / 1000) / (60 * 60);
+
+        return diffInHours * rate;
     }
 
     private void startFindSpotFragment() {
@@ -100,7 +133,7 @@ public class DriverReviewFragment extends Fragment {
         Updating the spot's specific rating will be handled from there.
          */
 
-        String url = String.format("%s/spots/rating/%s", getString(R.string.api_address), mSpot.getId());
+        String url = String.format("%s/reservations/%s/review", getString(R.string.api_address), mReservation.getId());
         StringRequest ratingRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -121,7 +154,6 @@ public class DriverReviewFragment extends Fragment {
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(ratingRequest);
-
     }
 
 }

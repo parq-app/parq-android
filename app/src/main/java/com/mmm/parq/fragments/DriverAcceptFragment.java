@@ -129,7 +129,7 @@ public class DriverAcceptFragment extends Fragment {
         mNavigationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setStateNavigation();
+                acceptReservation();
                 startNavigation();
 
                 mIsTransitioning = true;
@@ -168,6 +168,7 @@ public class DriverAcceptFragment extends Fragment {
         }
     }
 
+    // TODO(kenzshelley) Make this cancel the reservation instead once that exists on the backend.
     private void leaveSpot() {
         String url = String.format("%s/reservations/%s/finish", getString(R.string.api_address), mReservation.getId());
         StringRequest leaveRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
@@ -204,8 +205,8 @@ public class DriverAcceptFragment extends Fragment {
         return ft;
     }
 
-    private void setStateNavigation() {
-        String url = String.format("%s/reservations/%s/navigating", getString(R.string.api_address), mReservation.getId());
+    private void acceptReservation() {
+        String url = String.format("%s/reservations/%s/accept", getString(R.string.api_address), mReservation.getId());
         StringRequest occupyRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -213,7 +214,7 @@ public class DriverAcceptFragment extends Fragment {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.w("Failed occupy request: ", error.toString());
+                Log.w(TAG, "Failed to accept reservation: " + error.getMessage());
             }
         });
 

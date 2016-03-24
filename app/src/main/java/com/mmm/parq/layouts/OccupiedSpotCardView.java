@@ -74,11 +74,6 @@ public class OccupiedSpotCardView extends CardView {
         return diffInMinutes;
     }
 
-    // TODO(kenzshelley) Remove this once Reservations include cost themselves.
-    public double getCurrentCost() {
-        return mNetCost;
-    }
-
     private String intToTimeString(long timeInMinutes) {
         long hours = timeInMinutes / 60;
         long minutes = timeInMinutes % 60;

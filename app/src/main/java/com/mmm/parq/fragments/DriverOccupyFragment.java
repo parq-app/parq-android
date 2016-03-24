@@ -54,7 +54,6 @@ public class DriverOccupyFragment extends Fragment {
                 try {
                     mReservation = mCallback.getReservation(reservationId).get();
                     mSpot = mCallback.getSpot(mReservation.getAttribute("spotId")).get();
-
                 } catch (Exception e) {
                 }
             }
@@ -89,12 +88,12 @@ public class DriverOccupyFragment extends Fragment {
             // If the app is resuming in this state, the spot is already occupied on the server.
             boolean alreadyOccupied = getArguments().getBoolean("occupied");
             if (!alreadyOccupied) {
-                occupySpot();
+                occupyReservation();
             } else {
                 reservationUpdatedLatch.countDown();
             }
         } else {
-            occupySpot();
+            occupyReservation();
         }
 
         Thread switchToOccupiedSpot = new Thread() {
@@ -117,7 +116,7 @@ public class DriverOccupyFragment extends Fragment {
         switchToOccupiedSpot.start();
     }
 
-    private void occupySpot() {
+    private void occupyReservation() {
         String url = String.format("%s/reservations/%s/occupy", getString(R.string.api_address), mReservation.getId());
         StringRequest occupyRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override

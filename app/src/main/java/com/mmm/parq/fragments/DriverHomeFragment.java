@@ -215,6 +215,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 break;
             case END_RESERVATION:
                 fragment = new DriverReviewFragment();
+                args.putString("reservationId", mReservationId);
+                fragment.setArguments(args);
                 break;
         }
 
