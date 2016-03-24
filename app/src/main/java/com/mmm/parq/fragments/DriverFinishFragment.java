@@ -27,9 +27,7 @@ import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
 
-import java.util.concurrent.FutureTask;
-
-public class DriverOccupiedSpotFragment extends Fragment {
+public class DriverFinishFragment extends Fragment {
     private Button mEndReservationButton;
     private OccupiedSpotCardView mOccupiedSpotCardView;
     private OnNavigationCompletedListener mCallback;
@@ -40,14 +38,14 @@ public class DriverOccupiedSpotFragment extends Fragment {
     static private int CARD_WIDTH = 380;
     static private int CARD_BOTTOM_MARGIN = 4;
 
-    static private String TAG = DriverOccupiedSpotFragment.class.getSimpleName();
+    static private String TAG = DriverFinishFragment.class.getSimpleName();
 
     public interface OnNavigationCompletedListener extends MapController,
             HasSpot, HasReservation {
         void showEndReservationFragment(double cost);
     }
 
-    public DriverOccupiedSpotFragment() {}
+    public DriverFinishFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,7 +54,7 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_spot_occupied_driver, container, false);
+        View view = inflater.inflate(R.layout.fragment_finish_driver, container, false);
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.occupied_layout);
 
         // Clear the map

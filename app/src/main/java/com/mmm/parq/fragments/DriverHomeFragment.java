@@ -198,23 +198,23 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 fragment = new DriverFindSpotFragment();
                 break;
             case NAVIGATION:
-                fragment = new DriverNavigationFragment();
+                fragment = new DriverAcceptFragment();
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
             case ARRIVE_SPOT:
-                fragment = new DriverArriveSpotFragment();
+                fragment = new DriverOccupyFragment();
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
             case OCCUPY_SPOT:
-                fragment = new DriverOccupiedSpotFragment();
+                fragment = new DriverFinishFragment();
                 args.putBoolean("occupied", true);
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
             case END_RESERVATION:
-                fragment = new DriverEndReservationFragment();
+                fragment = new DriverReviewFragment();
                 break;
         }
 

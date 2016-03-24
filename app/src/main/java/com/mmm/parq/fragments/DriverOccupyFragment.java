@@ -26,14 +26,14 @@ import com.mmm.parq.utils.HttpClient;
 
 import java.util.concurrent.CountDownLatch;
 
-public class DriverArriveSpotFragment extends Fragment {
+public class DriverOccupyFragment extends Fragment {
     private Button mArriveSpotButton;
     private CountDownLatch reservationUpdatedLatch = new CountDownLatch(1);
     private Reservation mReservation;
     private Spot mSpot;
     private ArriveSpotListener mCallback;
 
-    private static final String TAG = DriverArriveSpotFragment.class.getSimpleName();
+    private static final String TAG = DriverOccupyFragment.class.getSimpleName();
 
     public interface ArriveSpotListener extends HasReservation, HasSpot, NeedsState {
     }
@@ -41,7 +41,7 @@ public class DriverArriveSpotFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_arrive_spot_driver,
+        View view = inflater.inflate(R.layout.fragment_occupy_driver,
                 container, false);
 
         Thread fetchData = new Thread() {
@@ -107,9 +107,9 @@ public class DriverArriveSpotFragment extends Fragment {
                 }
 
                 mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
-                DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
+                DriverFinishFragment driverFinishFragment = new DriverFinishFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
+                fragmentTransaction.replace(R.id.driver_fragment_container, driverFinishFragment);
                 fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
             }

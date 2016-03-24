@@ -3,7 +3,6 @@ package com.mmm.parq.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +26,7 @@ import com.mmm.parq.utils.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DriverEndReservationFragment extends Fragment {
+public class DriverReviewFragment extends Fragment {
     private Button mSubmitButton;
     private EditText mComment;
     private OnChangeFragmentListener mCallback;
@@ -40,12 +39,12 @@ public class DriverEndReservationFragment extends Fragment {
         void setFragment(Fragment fragment);
     }
 
-    public DriverEndReservationFragment() {}
+    public DriverReviewFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_end_reservation_driver, container, false);
+        View view = inflater.inflate(R.layout.fragment_review_driver, container, false);
 
         mAddress = (TextView) view.findViewById(R.id.spot_addr);
         mCost = (TextView) view.findViewById(R.id.cost);

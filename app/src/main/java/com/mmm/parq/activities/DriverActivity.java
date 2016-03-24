@@ -32,13 +32,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
-import com.mmm.parq.fragments.DriverArriveSpotFragment;
-import com.mmm.parq.fragments.DriverEndReservationFragment;
+import com.mmm.parq.fragments.DriverOccupyFragment;
+import com.mmm.parq.fragments.DriverReviewFragment;
 import com.mmm.parq.fragments.DriverFindSpotFragment;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
-import com.mmm.parq.fragments.DriverNavigationFragment;
-import com.mmm.parq.fragments.DriverOccupiedSpotFragment;
+import com.mmm.parq.fragments.DriverAcceptFragment;
+import com.mmm.parq.fragments.DriverFinishFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
 import com.mmm.parq.interfaces.HasLocation;
@@ -59,11 +59,11 @@ public class DriverActivity extends AppCompatActivity implements
         HasLocation,
         HasUser,
         DriverFindSpotFragment.HostsDriverFindSpotFragment,
-        DriverNavigationFragment.OnDirectionsRequestedListener,
-        DriverOccupiedSpotFragment.OnNavigationCompletedListener,
+        DriverAcceptFragment.OnDirectionsRequestedListener,
+        DriverFinishFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
-        DriverEndReservationFragment.OnChangeFragmentListener,
-        DriverArriveSpotFragment.ArriveSpotListener {
+        DriverReviewFragment.OnChangeFragmentListener,
+        DriverOccupyFragment.ArriveSpotListener {
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
@@ -249,14 +249,14 @@ public class DriverActivity extends AppCompatActivity implements
     // Implementing OnNavigationCompletedListener Interface
     @Override
     public void showEndReservationFragment(double cost) {
-            DriverEndReservationFragment driverEndReservationFragment = new DriverEndReservationFragment();
+            DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
             FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
             // TODO(kenzshelley) Remove this once Reservations include cost themselves.
             Bundle args = new Bundle();
             args.putDouble("cost", cost);
-            driverEndReservationFragment.setArguments(args);
+            driverReviewFragment.setArguments(args);
 
-            fragmentTransaction.replace(R.id.container, driverEndReservationFragment);
+            fragmentTransaction.replace(R.id.container, driverReviewFragment);
             setState(DriverHomeFragment.State.END_RESERVATION);
             fragmentTransaction.commit();
     }
@@ -446,7 +446,7 @@ public class DriverActivity extends AppCompatActivity implements
         }
     }
 
-    // TODO(kenzshelley) Remove this as soon as DriverEndReservationFragment handles resumptions properly.
+    // TODO(kenzshelley) Remove this as soon as DriverReviewFragment handles resumptions properly.
     public Spot getSpot() {
         return mSpot;
     }

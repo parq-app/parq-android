@@ -24,7 +24,6 @@ import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.model.LatLng;
 import com.mmm.parq.R;
-import com.mmm.parq.activities.DriverActivity;
 import com.mmm.parq.exceptions.RouteNotFoundException;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasReservation;
@@ -38,7 +37,6 @@ import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.DirectionsParser;
 import com.mmm.parq.utils.HttpClient;
-import com.mmm.parq.interfaces.NeedsLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +47,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-public class DriverNavigationFragment extends Fragment {
+public class DriverAcceptFragment extends Fragment {
     private Boolean mIsTransitioning;
     private Button mNavigationButton;
     private Directions mDirections;
@@ -69,18 +67,18 @@ public class DriverNavigationFragment extends Fragment {
     static private final int CARD_BOTTOM_MARGIN = 4;
     static private final int MAPS_REQUEST_CODE = 1;
 
-    static private String TAG = DriverNavigationFragment.class.getSimpleName();
+    static private String TAG = DriverAcceptFragment.class.getSimpleName();
 
     public interface OnDirectionsRequestedListener extends MapController, HasSpot,
             HasReservation, NeedsState, HasLocation {
     }
 
-    public DriverNavigationFragment() {}
+    public DriverAcceptFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_navigation_driver, container,
+        View view = inflater.inflate(R.layout.fragment_accept_driver, container,
                 false);
 
         mIsTransitioning = false;
@@ -136,9 +134,9 @@ public class DriverNavigationFragment extends Fragment {
 
                 mIsTransitioning = true;
                 mCallback.setState(DriverHomeFragment.State.ARRIVE_SPOT);
-                DriverArriveSpotFragment driverArriveSpotFragment = new DriverArriveSpotFragment();
+                DriverOccupyFragment driverOccupyFragment = new DriverOccupyFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.driver_fragment_container, driverArriveSpotFragment);
+                fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupyFragment);
                 fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
             }
