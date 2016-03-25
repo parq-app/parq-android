@@ -69,11 +69,11 @@ public class DriverFindSpotFragment extends Fragment {
 
     private void reserveSpot() {
         // Start the navigation fragment.
-        mCallback.setState(DriverHomeFragment.State.NAVIGATION);
+        mCallback.setState(DriverHomeFragment.State.RESERVED);
         DriverAcceptFragment driverAcceptFragment = new DriverAcceptFragment();
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.driver_fragment_container, driverAcceptFragment);
-        ((DriverActivity) getActivity()).setState(DriverHomeFragment.State.NAVIGATION);
+        ((DriverActivity) getActivity()).setState(DriverHomeFragment.State.RESERVED);
         fragmentTransaction.commit();
     }
 }

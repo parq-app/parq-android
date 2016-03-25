@@ -17,6 +17,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
+import com.google.gson.Gson;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
@@ -27,8 +28,11 @@ import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
 
+import java.util.concurrent.CountDownLatch;
+
 public class DriverFinishFragment extends Fragment {
     private Button mEndReservationButton;
+    private CountDownLatch reservationUpdatedLatch = new CountDownLatch(1);
     private OccupiedSpotCardView mOccupiedSpotCardView;
     private OnNavigationCompletedListener mCallback;
     private RelativeLayout mRelativeLayout;
@@ -99,7 +103,18 @@ public class DriverFinishFragment extends Fragment {
                 // Free the spot
                 finishReservation();
 
-                mCallback.showReviewFragment();
+                Thread switchToReviewFragment = new Thread() {
+                    public void run() {
+                        try {
+                            reservationUpdatedLatch.await();
+                        } catch (InterruptedException e) {
+                            Log.w(TAG, e.getMessage());
+                        }
+
+                        mCallback.showReviewFragment();
+                    }
+                };
+                switchToReviewFragment.start();
             }
         });
 
@@ -122,6 +137,16 @@ public class DriverFinishFragment extends Fragment {
         StringRequest leaveRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                // Finishing the reservation updates the reservation. Parse it and set it as the current reservation.
+                Gson gson = new Gson();
+                Reservation updatedReservation = gson.fromJson(response, Reservation.class);
+                mCallback.updateReservation(updatedReservation);
+                try {
+                    mReservation = mCallback.getReservation(updatedReservation.getId()).get();
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+                reservationUpdatedLatch.countDown();
             }
         }, new Response.ErrorListener() {
             @Override

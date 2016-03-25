@@ -74,7 +74,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private static final String TAG = DriverHomeFragment.class.getSimpleName();
 
     public enum State {
-        FIND_SPOT, NAVIGATION, ARRIVE_SPOT, OCCUPY_SPOT, END_RESERVATION
+        FIND_SPOT, RESERVED, ACCEPTED, OCCUPIED, FINISHED
     }
 
     public interface OnLocationReceivedListener extends HasLocation, HasReservation, HasUser {
@@ -197,23 +197,23 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             case FIND_SPOT:
                 fragment = new DriverFindSpotFragment();
                 break;
-            case NAVIGATION:
+            case RESERVED:
                 fragment = new DriverAcceptFragment();
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
-            case ARRIVE_SPOT:
+            case ACCEPTED:
                 fragment = new DriverOccupyFragment();
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
-            case OCCUPY_SPOT:
+            case OCCUPIED:
                 fragment = new DriverFinishFragment();
                 args.putBoolean("occupied", true);
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
                 break;
-            case END_RESERVATION:
+            case FINISHED:
                 fragment = new DriverReviewFragment();
                 args.putString("reservationId", mReservationId);
                 fragment.setArguments(args);
@@ -349,10 +349,10 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                             Log.w(TAG, "Error retrieving reservation: " + e.getMessage());
                             return;
                         }
-                        if ("navigating".equals(reservation.getAttribute("status"))) {
-                            mState = DriverHomeFragment.State.ARRIVE_SPOT;
+                        if ("accepted".equals(reservation.getAttribute("status"))) {
+                            mState = DriverHomeFragment.State.ACCEPTED;
                         } else {
-                            mState = DriverHomeFragment.State.OCCUPY_SPOT;
+                            mState = DriverHomeFragment.State.OCCUPIED;
                         }
                     } else {
                         mState = DriverHomeFragment.State.FIND_SPOT;

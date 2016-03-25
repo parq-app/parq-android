@@ -64,7 +64,7 @@ public class DriverOccupyFragment extends Fragment {
         mArriveSpotButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                arriveSpot();
+                occupySpot();
             }
         });
 
@@ -82,7 +82,7 @@ public class DriverOccupyFragment extends Fragment {
         }
     }
 
-    private void arriveSpot() {
+    private void occupySpot() {
         // Occupy the spot
         if (getArguments() != null) {
             // If the app is resuming in this state, the spot is already occupied on the server.
@@ -105,7 +105,7 @@ public class DriverOccupyFragment extends Fragment {
                     Log.w(TAG, e.getMessage());
                 }
 
-                mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
+                mCallback.setState(DriverHomeFragment.State.OCCUPIED);
                 DriverFinishFragment driverFinishFragment = new DriverFinishFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
                 fragmentTransaction.replace(R.id.driver_fragment_container, driverFinishFragment);

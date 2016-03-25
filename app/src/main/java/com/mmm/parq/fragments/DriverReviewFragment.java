@@ -69,16 +69,22 @@ public class DriverReviewFragment extends Fragment {
         Thread fetchData = new Thread() {
             public void run() {
                 try {
+
                     mReservation = mCallback.getReservation(mReservationId).get();
                     mSpot = mCallback.getSpot(mReservation.getAttribute("spotId")).get();
 
-                    double rate = Double.parseDouble(mSpot.getAttribute("cost"));
+                    double rate = Double.parseDouble(mSpot.getAttribute("costPerHour"));
                     double startTime = Double.parseDouble(mReservation.getAttribute("timeStart"));
                     double endTime = Double.parseDouble(mReservation.getAttribute("timeEnd"));
                     mCost = calculateCost(rate, startTime, endTime);
 
-                    mCostView.setText(String.format("$%.2f", mCost));
-                    mAddress.setText(mSpot.getAttribute("addr"));
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mCostView.setText(String.format("$%.2f", mCost));
+                            mAddress.setText(mSpot.getAttribute("addr"));
+                        }
+                    });
 
                     // TODO(kenzshelley) Unclear if setting a click listener from inside a thread is an okay thing to do
                     mSubmitButton.setOnClickListener(new View.OnClickListener() {
@@ -111,7 +117,7 @@ public class DriverReviewFragment extends Fragment {
 
     private double calculateCost(double rate, double startTimeInMillis, double endTimeInMillis) {
         double diffInMillis = endTimeInMillis - startTimeInMillis;
-        double  diffInHours = (diffInMillis / 1000) / (60 * 60);
+        double diffInHours = (diffInMillis / 1000) / (60 * 60);
 
         return diffInHours * rate;
     }
@@ -127,12 +133,7 @@ public class DriverReviewFragment extends Fragment {
                 commit();
     }
 
-    private void submitRating(final double rating, String comment) {
-        /*
-        TODO(kenzshelley) Make this actually submit rating information to a seperate ratings endpoint.
-        Updating the spot's specific rating will be handled from there.
-         */
-
+    private void submitRating(final double rating, final String comment) {
         String url = String.format("%s/reservations/%s/review", getString(R.string.api_address), mReservation.getId());
         StringRequest ratingRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
@@ -148,6 +149,7 @@ public class DriverReviewFragment extends Fragment {
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
                 params.put("rating", String.valueOf(rating));
+                params.put("comment", comment);
                 return params;
             }
         };

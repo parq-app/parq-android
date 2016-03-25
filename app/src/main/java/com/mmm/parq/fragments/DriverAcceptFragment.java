@@ -133,7 +133,7 @@ public class DriverAcceptFragment extends Fragment {
                 startNavigation();
 
                 mIsTransitioning = true;
-                mCallback.setState(DriverHomeFragment.State.ARRIVE_SPOT);
+                mCallback.setState(DriverHomeFragment.State.ACCEPTED);
                 DriverOccupyFragment driverOccupyFragment = new DriverOccupyFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
                 fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupyFragment);
