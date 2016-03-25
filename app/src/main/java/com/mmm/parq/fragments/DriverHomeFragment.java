@@ -78,6 +78,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     }
 
     public interface OnLocationReceivedListener extends HasLocation, HasReservation, HasUser {
+        void showReviewFragment();
     }
 
     public DriverHomeFragment() {}
@@ -214,10 +215,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 fragment.setArguments(args);
                 break;
             case FINISHED:
-                fragment = new DriverReviewFragment();
-                args.putString("reservationId", mReservationId);
-                fragment.setArguments(args);
-                break;
+                mCallback.showReviewFragment();
+                return;
         }
 
         getChildFragmentManager().beginTransaction().
@@ -351,8 +350,10 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                         }
                         if ("accepted".equals(reservation.getAttribute("status"))) {
                             mState = DriverHomeFragment.State.ACCEPTED;
-                        } else {
+                        } else if ("occupied".equals(reservation.getAttribute("status"))) {
                             mState = DriverHomeFragment.State.OCCUPIED;
+                        } else if ("finished".equals(reservation.getAttribute("status"))) {
+                            mState = DriverHomeFragment.State.FINISHED;
                         }
                     } else {
                         mState = DriverHomeFragment.State.FIND_SPOT;

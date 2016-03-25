@@ -447,11 +447,6 @@ public class DriverActivity extends AppCompatActivity implements
         }
     }
 
-    // TODO(kenzshelley) Remove this as soon as DriverReviewFragment handles resumptions properly.
-    public Spot getSpot() {
-        return mSpot;
-    }
-
     // Private helper methods
     private Future<String> requestUser(String userId) {
         RequestFuture<String> future = RequestFuture.newFuture();

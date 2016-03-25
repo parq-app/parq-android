@@ -86,7 +86,6 @@ public class DriverReviewFragment extends Fragment {
                         }
                     });
 
-                    // TODO(kenzshelley) Unclear if setting a click listener from inside a thread is an okay thing to do
                     mSubmitButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
