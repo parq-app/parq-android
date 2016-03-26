@@ -41,6 +41,7 @@ import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverReviewFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
 import com.mmm.parq.interfaces.HasLocation;
+import com.mmm.parq.interfaces.HasToolbar;
 import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
@@ -58,6 +59,7 @@ import java.util.concurrent.FutureTask;
 public class DriverActivity extends AppCompatActivity implements
         HasLocation,
         HasUser,
+        HasToolbar,
         DriverFindSpotFragment.HostsDriverFindSpotFragment,
         DriverAcceptFragment.OnDirectionsRequestedListener,
         DriverFinishFragment.OnNavigationCompletedListener,
@@ -74,6 +76,7 @@ public class DriverActivity extends AppCompatActivity implements
     private Spot mSpot;
     private DriverHomeFragment.State mState;
     private TextView mNameView;
+    private Toolbar mToolbar;
     private User mUser;
     private Location mUserLocation;
 
@@ -84,9 +87,9 @@ public class DriverActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        mToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(mToolbar);
+        mToolbar.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         final android.support.v7.app.ActionBar ab = getSupportActionBar();
         ab.setDisplayShowTitleEnabled(false);
@@ -128,7 +131,7 @@ public class DriverActivity extends AppCompatActivity implements
         NavigationView view = (NavigationView) findViewById(R.id.navigation_view);
         mPreviousItem = view.getMenu().getItem(0);
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar,
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar,
                 R.string.settings, R.string.settings) {
 
             /** Called when a drawer has settled in a completely closed state. */
@@ -246,26 +249,12 @@ public class DriverActivity extends AppCompatActivity implements
 
     // Interfaces
 
-    // Implementing OnNavigationCompletedListener Interface
-    @Override
-    public void showReviewFragment() {
-            DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
-            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-
-            // TODO(kenzshelley) Remove this once Reservations include cost themselves.
-            Bundle args = new Bundle();
-            args.putString("reservationId", mReservation.getId());
-            driverReviewFragment.setArguments(args);
-
-            fragmentTransaction.replace(R.id.container, driverReviewFragment);
-            setState(DriverHomeFragment.State.FINISHED);
-            fragmentTransaction.commit();
-    }
-
     // Implementing OnChangeFragmentListener Interface
     @Override
     public void setFragment(Fragment fragment) {
         mFragment = fragment;
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment).
+                commitAllowingStateLoss();
     }
 
     // Implementing MapController Interface
@@ -445,6 +434,14 @@ public class DriverActivity extends AppCompatActivity implements
 
             return mUser;
         }
+    }
+
+    public void hideToolbar() {
+        getSupportActionBar().hide();
+    }
+
+    public void showToolbar() {
+        getSupportActionBar().show();
     }
 
     // Private helper methods

@@ -38,6 +38,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mmm.parq.R;
+import com.mmm.parq.interfaces.HasFragment;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasUser;
@@ -77,8 +78,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         FIND_SPOT, RESERVED, ACCEPTED, OCCUPIED, FINISHED
     }
 
-    public interface OnLocationReceivedListener extends HasLocation, HasReservation, HasUser {
-        void showReviewFragment();
+    public interface OnLocationReceivedListener extends HasLocation, HasReservation,
+            HasUser, HasFragment {
     }
 
     public DriverHomeFragment() {}
@@ -215,7 +216,12 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 fragment.setArguments(args);
                 break;
             case FINISHED:
-                mCallback.showReviewFragment();
+                DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
+                args.putString("reservationId", mReservationId);
+                driverReviewFragment.setArguments(args);
+                mCallback.setFragment(driverReviewFragment);
+
+                // The activity set's the fragment in this case.
                 return;
         }
 

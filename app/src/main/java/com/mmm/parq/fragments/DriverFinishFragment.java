@@ -19,6 +19,7 @@ import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
+import com.mmm.parq.interfaces.HasFragment;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
 import com.mmm.parq.interfaces.MapController;
@@ -45,8 +46,7 @@ public class DriverFinishFragment extends Fragment {
     static private String TAG = DriverFinishFragment.class.getSimpleName();
 
     public interface OnNavigationCompletedListener extends MapController,
-            HasSpot, HasReservation {
-        void showReviewFragment();
+            HasSpot, HasReservation, HasFragment {
     }
 
     public DriverFinishFragment() {}
@@ -111,7 +111,11 @@ public class DriverFinishFragment extends Fragment {
                             Log.w(TAG, e.getMessage());
                         }
 
-                        mCallback.showReviewFragment();
+                        DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
+                        Bundle args = new Bundle();
+                        args.putString("reservationId", mReservation.getId());
+                        driverReviewFragment.setArguments(args);
+                        mCallback.setFragment(driverReviewFragment);
                     }
                 };
                 switchToReviewFragment.start();

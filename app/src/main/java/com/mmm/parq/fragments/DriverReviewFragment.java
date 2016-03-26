@@ -18,8 +18,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.mmm.parq.R;
+import com.mmm.parq.interfaces.HasFragment;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
+import com.mmm.parq.interfaces.HasToolbar;
 import com.mmm.parq.interfaces.NeedsState;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
@@ -42,8 +44,8 @@ public class DriverReviewFragment extends Fragment {
 
     private static final String TAG = DriverReviewFragment.class.getSimpleName();
 
-    public interface HostsDriverReviewFragment extends NeedsState, HasReservation, HasSpot {
-        void setFragment(Fragment fragment);
+    public interface HostsDriverReviewFragment extends NeedsState, HasReservation, HasSpot,
+            HasFragment, HasToolbar {
     }
 
     public DriverReviewFragment() {}
@@ -53,11 +55,12 @@ public class DriverReviewFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_review_driver, container, false);
 
+        mCallback.hideToolbar();
+
         if (getArguments() == null) {
             Log.e(TAG, "Missing required arguments for fragment.");
         } else {
             mReservationId = getArguments().getString("reservationId");
-            mCost = getArguments().getDouble("cost");
         }
 
         mAddress = (TextView) view.findViewById(R.id.spot_addr);
@@ -65,6 +68,7 @@ public class DriverReviewFragment extends Fragment {
         mRatingBar = (RatingBar) view.findViewById(R.id.rating_bar);
         mComment = (EditText) view.findViewById(R.id.rating_comment);
         mSubmitButton = (Button) view.findViewById(R.id.submit_rating_button);
+
 
         Thread fetchData = new Thread() {
             public void run() {
@@ -91,6 +95,7 @@ public class DriverReviewFragment extends Fragment {
                         public void onClick(View v) {
                             submitRating(mRatingBar.getRating(), mComment.getText().toString());
                             startFindSpotFragment();
+                            mCallback.showToolbar();
                         }
                     });
                 } catch (Exception e) {
@@ -127,9 +132,6 @@ public class DriverReviewFragment extends Fragment {
         DriverHomeFragment driverHomeFragment = new DriverHomeFragment();
         driverHomeFragment.setArguments(args);
         mCallback.setFragment(driverHomeFragment);
-
-        getFragmentManager().beginTransaction().replace(R.id.container, driverHomeFragment).
-                commit();
     }
 
     private void submitRating(final double rating, final String comment) {
