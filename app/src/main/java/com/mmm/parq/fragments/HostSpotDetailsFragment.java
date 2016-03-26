@@ -2,6 +2,7 @@ package com.mmm.parq.fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -28,7 +29,6 @@ public class HostSpotDetailsFragment extends Fragment {
     private static final String ARG_SPOT_ID = "spotId";
 
     private String mSpotId;
-    private Toolbar mToolbar;
     private TextView mSpotAddr;
     private TextView mSpotTitle;
     private RatingBar mSpotRating;
@@ -55,26 +55,22 @@ public class HostSpotDetailsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_spot_details, container, false);
 
+        final Toolbar toolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
+        toolbar.setTitle(R.string.host_spot_details_titlebar);
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                HostSpotDetailsFragment.this.getActivity().getSupportFragmentManager().popBackStack();
+            }
+        });
+
         mSpotTitle = (TextView) v.findViewById(R.id.details_spot_title);
         mSpotAddr = (TextView) v.findViewById(R.id.details_spot_addr);
         mSpotRating = (RatingBar) v.findViewById(R.id.details_spot_rating);
         mSpotNumRatings = (TextView) v.findViewById(R.id.details_spot_num_ratings);
         mSpotIsReserved = (TextView) v.findViewById(R.id.details_spot_reserved);
-
-        mToolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
-        mToolbar.setTitle("Spot Details");
-        mToolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
-        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO: probably need to pop backstack here
-                Fragment homeFragment = new HostHomeFragment();
-                HostSpotDetailsFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.host_fragment_container, homeFragment)
-                        .commit();
-            }
-        });
 
         String spotUrl = getString(R.string.api_address) + "/spots/" + mSpotId;
         JsonObjectRequest spotRequest = new JsonObjectRequest(spotUrl, null, new Response.Listener<JSONObject>() {

@@ -29,27 +29,25 @@ public class HostHomeFragment extends Fragment {
 
     private final static String TAG = HostHomeFragment.class.getSimpleName();
 
-    private Toolbar mToolbar;
-    private FloatingActionButton mFab;
     private GridView mHostSpotsGrid;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_home, container, false);
 
-        mToolbar = (Toolbar) v.findViewById(R.id.host_home_toolbar);
-        mToolbar.setTitle("Your Spots");
-        mToolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
-        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        final Toolbar toolbar = (Toolbar) v.findViewById(R.id.host_home_toolbar);
+        toolbar.setTitle(R.string.host_home_titlebar);
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getActivity().finish();
             }
         });
 
-        mFab = (FloatingActionButton) v.findViewById(R.id.new_spot_fab);
-        mFab.setOnClickListener(new View.OnClickListener() {
+        final FloatingActionButton fab = (FloatingActionButton) v.findViewById(R.id.new_spot_fab);
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Fragment newSpotFragment = new HostNewSpotFragment();

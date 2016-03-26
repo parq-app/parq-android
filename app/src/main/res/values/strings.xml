@@ -52,13 +52,16 @@
     <string name="error_field_required">This field is required</string>
 
     <!--Spot List Strings-->
+    <string name="host_home_titlebar">Your Spots</string>
 
     <!--Spot Creation Strings-->
+    <string name="host_new_spot_titlebar">Create New Spot</string>
     <string name="title">Title</string>
     <string name="address">Address</string>
     <string name="action_create_spot">Create Spot</string>
 
     <!--Spot Detail Strings-->
+    <string name="host_spot_details_titlebar">Spot Details</string>
     <string name="num_ratings">Number of Ratings: %d</string>
     <string name="occupied">Occupied</string>
     <string name="vacant">Vacant</string>

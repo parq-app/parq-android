@@ -33,10 +33,8 @@ public class HostNewSpotFragment extends Fragment {
     private static final String TAG = HostNewSpotFragment.class.getSimpleName();
 
     private GoogleApiClient mClient;
-    private Toolbar mToolbar;
     private EditText mTitleField;
     private EditText mAddressField;
-    private Button mListSpot;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,26 +46,22 @@ public class HostNewSpotFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_new_spot, container, false);
 
-        mToolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
-        mToolbar.setTitle("Create New Spot");
-        mToolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
-        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+        final Toolbar toolbar = (Toolbar) v.findViewById(R.id.new_spot_toolbar);
+        toolbar.setTitle(R.string.host_new_spot_titlebar);
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: probably need to pop backstack here
-                Fragment homeFragment = new HostHomeFragment();
-                HostNewSpotFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.host_fragment_container, homeFragment)
-                        .commit();
+                HostNewSpotFragment.this.getActivity().getSupportFragmentManager().popBackStack();
             }
         });
 
         mTitleField = (EditText) v.findViewById(R.id.new_spot_title);
         mAddressField = (EditText) v.findViewById(R.id.new_spot_address);
 
-        mListSpot = (Button) v.findViewById(R.id.list_spot_button);
-        mListSpot.setOnClickListener(new View.OnClickListener() {
+        final Button listSpot = (Button) v.findViewById(R.id.create_spot_button);
+        listSpot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String title = mTitleField.getText().toString();
@@ -105,11 +99,7 @@ public class HostNewSpotFragment extends Fragment {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, data.toString(), new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                // TODO: probably need to pop backstack here
-                Fragment homeFragment = new HostHomeFragment();
-                HostNewSpotFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.host_fragment_container, homeFragment)
-                        .commit();
+                HostNewSpotFragment.this.getActivity().getSupportFragmentManager().popBackStack();
             }
         }, new Response.ErrorListener() {
             @Override

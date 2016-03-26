@@ -7,7 +7,7 @@
     android:gravity="center_horizontal" >
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/spot_details_toolbar"
+        android:id="@+id/new_spot_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary" />
@@ -29,7 +29,7 @@
         android:singleLine="true" />
 
     <Button
-        android:id="@+id/list_spot_button"
+        android:id="@+id/create_spot_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/action_create_spot"
