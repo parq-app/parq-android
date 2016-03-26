@@ -318,6 +318,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             Log.w(TAG, "Don't have permission to access location.");
         }
 
+        // TODO(kenzshelley) figure out why this happens sometimes
+        if (mMap == null) return;
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new
                 LatLng(mLastLocation.getLatitude(),
                 mLastLocation.getLongitude()), 15));
