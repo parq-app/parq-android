@@ -1,7 +1,13 @@
 package com.mmm.parq.fragments;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +33,7 @@ public class HostNewSpotFragment extends Fragment {
     private static final String TAG = HostNewSpotFragment.class.getSimpleName();
 
     private GoogleApiClient mClient;
+    private Toolbar mToolbar;
     private EditText mTitleField;
     private EditText mAddressField;
     private Button mListSpot;
@@ -40,6 +47,21 @@ public class HostNewSpotFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_new_spot, container, false);
+
+        mToolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
+        mToolbar.setTitle("Create New Spot");
+        mToolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: probably need to pop backstack here
+                Fragment homeFragment = new HostHomeFragment();
+                HostNewSpotFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.host_fragment_container, homeFragment)
+                        .commit();
+            }
+        });
 
         mTitleField = (EditText) v.findViewById(R.id.new_spot_title);
         mAddressField = (EditText) v.findViewById(R.id.new_spot_address);
@@ -65,26 +87,25 @@ public class HostNewSpotFragment extends Fragment {
             String userId = ref.getAuth().getUid();
             data.put("userId", userId);
 
-            //// TODO(matt): pull the latlong from the entered address, not their cur loc
-            //LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            //if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-            //        == PackageManager.PERMISSION_GRANTED){
-            //    Location loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            //    data.put("lat", loc.getLatitude());
-            //    data.put("long", loc.getLongitude());
-            //}
-            data.put("lat", 42.273918);
-            data.put("long",-83.736153);
+            // TODO: pull the latlong from the entered address, not their cur loc
+            LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+            if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Location loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                data.put("lat", loc.getLatitude());
+                data.put("long", loc.getLongitude());
+            }
 
             data.put("addr", address);
             data.put("title", title);
         } catch (Exception e) {
-            Log.e(TAG, "error with json" + e);
+            Log.e(TAG, "Error with json" + e);
         }
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, data.toString(), new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
+                // TODO: probably need to pop backstack here
                 Fragment homeFragment = new HostHomeFragment();
                 HostNewSpotFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
                         .replace(R.id.host_fragment_container, homeFragment)

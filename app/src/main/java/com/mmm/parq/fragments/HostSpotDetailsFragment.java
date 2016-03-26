@@ -68,6 +68,7 @@ public class HostSpotDetailsFragment extends Fragment {
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // TODO: probably need to pop backstack here
                 Fragment homeFragment = new HostHomeFragment();
                 HostSpotDetailsFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
                         .replace(R.id.host_fragment_container, homeFragment)
@@ -87,11 +88,11 @@ public class HostSpotDetailsFragment extends Fragment {
                     mSpotRating.setRating((float) attrs.getDouble("rating"));
                     mSpotNumRatings.setText(String.format(getString(R.string.num_ratings), attrs.getInt("numRatings")));
                     if (attrs.getBoolean("isReserved")) {
-                        mSpotIsReserved.setText("Occupied");
+                        mSpotIsReserved.setText(R.string.occupied);
                         mSpotIsReserved.setBackgroundColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.occupiedPurple));
                     }
                     else {
-                        mSpotIsReserved.setText("Vacant");
+                        mSpotIsReserved.setText(R.string.vacant);
                         mSpotIsReserved.setBackgroundColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.vacantGreen));
                     }
                 } catch (JSONException e) {

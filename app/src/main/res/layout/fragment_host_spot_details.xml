@@ -21,7 +21,6 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="160dp"
-            android:contentDescription="Spot Picture"
             android:src="@drawable/pretty_spot_380_90" />
 
         <TextView

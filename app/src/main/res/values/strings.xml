@@ -50,12 +50,17 @@
     <string name="error_invalid_password">This password is invalid</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
-    <string name="title_activity_host_new_spot">Create a new spot</string>
+
+    <!--Spot List Strings-->
+
+    <!--Spot Creation Strings-->
+    <string name="title">Title</string>
     <string name="address">Address</string>
-    <string name="title">title</string>
-    <string name="action_upload_spot">Upload Spot</string>
+    <string name="action_create_spot">Create Spot</string>
 
     <!--Spot Detail Strings-->
     <string name="num_ratings">Number of Ratings: %d</string>
+    <string name="occupied">Occupied</string>
+    <string name="vacant">Vacant</string>
 
 </resources>

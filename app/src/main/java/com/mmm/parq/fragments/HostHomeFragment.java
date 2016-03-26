@@ -54,6 +54,7 @@ public class HostHomeFragment extends Fragment {
             public void onClick(View view) {
                 Fragment newSpotFragment = new HostNewSpotFragment();
                 getActivity().getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
                         .replace(R.id.host_fragment_container, newSpotFragment)
                         .commit();
             }
@@ -82,6 +83,7 @@ public class HostHomeFragment extends Fragment {
 
                             Fragment spotDetailsFragment = HostSpotDetailsFragment.newInstance(spotId);
                             HostHomeFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
+                                    .addToBackStack(null)
                                     .replace(R.id.host_fragment_container, spotDetailsFragment)
                                     .commit();
                         } catch (JSONException e) {
