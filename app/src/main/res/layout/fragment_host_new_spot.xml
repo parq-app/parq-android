@@ -16,6 +16,7 @@
         android:id="@+id/new_spot_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
         android:hint="@string/title"
         android:maxLines="1"
         android:singleLine="true" />
@@ -24,6 +25,7 @@
         android:id="@+id/new_spot_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
         android:hint="@string/address"
         android:maxLines="1"
         android:singleLine="true" />
@@ -33,6 +35,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/action_create_spot"
-        android:gravity="center_horizontal" />
+        android:textAlignment="center"
+        android:gravity="center_horizontal"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:background="@color/colorPrimary"
+        android:padding="24dp"/>
 
 </LinearLayout>
