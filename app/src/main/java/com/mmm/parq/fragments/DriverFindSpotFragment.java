@@ -35,6 +35,7 @@ public class DriverFindSpotFragment extends Fragment {
         // Clear the map
         mCallback.clearMap();
         mCallback.removeEndMarker();
+        mCallback.centerMapOnLocation();
 
         // Wire up location button
         mLocationButton = (ImageButton) view.findViewById(R.id.center_location_button);

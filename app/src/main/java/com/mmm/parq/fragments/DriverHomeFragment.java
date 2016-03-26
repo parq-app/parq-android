@@ -55,7 +55,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                                                             GoogleMap.OnMyLocationButtonClickListener {
-    private CountDownLatch stateSetLatch = new CountDownLatch(1);
+    private CountDownLatch stateSetLatch = new CountDownLatch(3);
     private Location mLastLocation;
     private GoogleMap mMap;
     private Marker mDestMarker;
@@ -67,8 +67,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private User mUser;
     private OnLocationReceivedListener mCallback;
 
-    static private final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
-    static private final int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
+    static public final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
+    static public final int FINE_LOCATION_PERMISSION_REQUEST_CODE = 0;
     static private final int LINE_WIDTH = 20;
     static private final int ZOOM_LEVEL = 16;
 
@@ -93,6 +93,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home_driver, container, false);
+
+        requestLocationPermission();
+
         mQueue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         mReservationId = null;
 
@@ -106,12 +109,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             initializeState();
         }
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
-        // Wait until mState is set and then initialize overlay fragment based upon |mState|
+        // Wait until mState is set and permissions to be granted then initialize overlay
+        // fragment based upon |mState|
         Thread stateThread = new Thread() {
             public void run() {
                 try {
@@ -132,31 +131,19 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        stateSetLatch.countDown();
 
+        try {
+            mMap.setMyLocationEnabled(true);
+        } catch (SecurityException e) {
+            Log.e(TAG, "User failed to grant location permissions: " + e.getMessage());
+        }
         mMap.setPadding(0, ConversionUtils.dpToPx(getActivity(), 48), 0, 0);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        enableMyLocation();
-
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(
                 new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), ZOOM_LEVEL);
         mMap.animateCamera(cameraUpdate);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == FINE_LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Enable the my location layer if the permission has been granted.
-                enableMyLocation();
-            }
-        } else if(requestCode == COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Enable the my location layer if the permission has been granted.
-                enableMyLocation();
-            }
-        }
     }
 
     @Override
@@ -190,6 +177,18 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         if (mState != null) {
             setOverlayFragment();
         }
+    }
+
+    // Public because the activity will call this when it receives permissions.
+    public void onLocationPermissionGranted() {
+        mLastLocation = getLocation();
+        mCallback.setLocation(mLastLocation);
+        stateSetLatch.countDown();
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) this.getChildFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     public void setOverlayFragment() {
@@ -339,6 +338,9 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 public void run() {
                     try {
                         mUser = mCallback.getUser().get();
+                        if (mUser == null) {
+                            return;
+                        }
                     } catch (Exception e) {
                         Log.w(TAG, e.getMessage());
                         return;
@@ -401,7 +403,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         return location;
     }
 
-    private void enableMyLocation() {
+    private void requestLocationPermission() {
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),
@@ -412,11 +414,8 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                     COARSE_LOCATION_PERMISSION_REQUEST_CODE);
-        } else if (mMap != null) {
-            // Access to the location has been granted to the app.
-            mMap.setMyLocationEnabled(true);
-            mLastLocation = getLocation();
-            mCallback.setLocation(mLastLocation);
+        } else {
+            onLocationPermissionGranted();
         }
     }
 }

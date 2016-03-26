@@ -1,9 +1,11 @@
 package com.mmm.parq.activities;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -247,6 +249,32 @@ public class DriverActivity extends AppCompatActivity implements
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == DriverHomeFragment.FINE_LOCATION_PERMISSION_REQUEST_CODE) {
+            // Access to the location has been granted to the app.
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    DriverHomeFragment fragment = (DriverHomeFragment) mFragment;
+                    fragment.onLocationPermissionGranted();
+                } catch (ClassCastException e) {
+                    Log.e(TAG, "Incorrect type of fragment: " + e.getMessage());
+                }
+            }
+        } else if(requestCode == DriverHomeFragment.COARSE_LOCATION_PERMISSION_REQUEST_CODE) {
+            // Access to the location has been granted to the app.
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    DriverHomeFragment fragment = (DriverHomeFragment) mFragment;
+                    fragment.onLocationPermissionGranted();
+                } catch (ClassCastException e) {
+                    Log.e(TAG, "Incorrect type of fragment: " + e.getMessage());
+                }
+            }
+        }
+    }
+
     // Interfaces
 
     // Implementing OnChangeFragmentListener Interface
@@ -401,8 +429,7 @@ public class DriverActivity extends AppCompatActivity implements
     // Implementing HasUser Interface
     public Future<User> getUser() {
         // Get user id
-        Firebase firebaseRef = new Firebase(getString(R.string.firebase_endpoint));
-        AuthData authData = firebaseRef.getAuth();
+        AuthData authData = mFirebaseRef.getAuth();
         if (authData == null) {
             redirectToLogin();
             return null;
@@ -428,9 +455,18 @@ public class DriverActivity extends AppCompatActivity implements
             try {
                 Gson gson = new Gson();
                 mUser = gson.fromJson(userFuture.get(), User.class);
-            } catch (Exception e) {
+            } catch (InterruptedException e) {
                 Log.w(TAG, e.toString());
-            }
+            } catch (ExecutionException e) {
+                    VolleyError volleyError = (VolleyError) e.getCause();
+                    NetworkResponse networkResponse = volleyError.networkResponse;
+
+                    if (networkResponse.statusCode == 500) {
+                        Log.e(TAG, "Error getting user: " + volleyError.getMessage() +
+                                ". Redirecting to login.");
+                        redirectToLogin();
+                    }
+                }
 
             return mUser;
         }
@@ -524,7 +560,10 @@ public class DriverActivity extends AppCompatActivity implements
             public void run() {
                 try {
                     mUser = getUser().get();
-                    if (mUser == null) redirectToLogin();
+                    if (mUser == null) {
+                        redirectToLogin();
+                        return;
+                    }
                 } catch (InterruptedException e) {
                     Log.w(TAG, "Error initializing user: " + e.getMessage());
                 } catch (ExecutionException e) {
@@ -535,6 +574,7 @@ public class DriverActivity extends AppCompatActivity implements
                         Log.e(TAG, "Error getting user: " + volleyError.getMessage() +
                                 ". Redirecting to login.");
                         redirectToLogin();
+                        return;
                     }
                 }
 
