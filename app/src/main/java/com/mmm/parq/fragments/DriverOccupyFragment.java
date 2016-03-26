@@ -26,14 +26,14 @@ import com.mmm.parq.utils.HttpClient;
 
 import java.util.concurrent.CountDownLatch;
 
-public class DriverArriveSpotFragment extends Fragment {
+public class DriverOccupyFragment extends Fragment {
     private Button mArriveSpotButton;
     private CountDownLatch reservationUpdatedLatch = new CountDownLatch(1);
     private Reservation mReservation;
     private Spot mSpot;
     private ArriveSpotListener mCallback;
 
-    private static final String TAG = DriverArriveSpotFragment.class.getSimpleName();
+    private static final String TAG = DriverOccupyFragment.class.getSimpleName();
 
     public interface ArriveSpotListener extends HasReservation, HasSpot, NeedsState {
     }
@@ -41,7 +41,7 @@ public class DriverArriveSpotFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_arrive_spot_driver,
+        View view = inflater.inflate(R.layout.fragment_occupy_driver,
                 container, false);
 
         Thread fetchData = new Thread() {
@@ -54,7 +54,6 @@ public class DriverArriveSpotFragment extends Fragment {
                 try {
                     mReservation = mCallback.getReservation(reservationId).get();
                     mSpot = mCallback.getSpot(mReservation.getAttribute("spotId")).get();
-
                 } catch (Exception e) {
                 }
             }
@@ -65,7 +64,7 @@ public class DriverArriveSpotFragment extends Fragment {
         mArriveSpotButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                arriveSpot();
+                occupySpot();
             }
         });
 
@@ -83,18 +82,18 @@ public class DriverArriveSpotFragment extends Fragment {
         }
     }
 
-    private void arriveSpot() {
+    private void occupySpot() {
         // Occupy the spot
         if (getArguments() != null) {
             // If the app is resuming in this state, the spot is already occupied on the server.
             boolean alreadyOccupied = getArguments().getBoolean("occupied");
             if (!alreadyOccupied) {
-                occupySpot();
+                occupyReservation();
             } else {
                 reservationUpdatedLatch.countDown();
             }
         } else {
-            occupySpot();
+            occupyReservation();
         }
 
         Thread switchToOccupiedSpot = new Thread() {
@@ -106,10 +105,10 @@ public class DriverArriveSpotFragment extends Fragment {
                     Log.w(TAG, e.getMessage());
                 }
 
-                mCallback.setState(DriverHomeFragment.State.OCCUPY_SPOT);
-                DriverOccupiedSpotFragment driverOccupiedSpotFragment = new DriverOccupiedSpotFragment();
+                mCallback.setState(DriverHomeFragment.State.OCCUPIED);
+                DriverFinishFragment driverFinishFragment = new DriverFinishFragment();
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.driver_fragment_container, driverOccupiedSpotFragment);
+                fragmentTransaction.replace(R.id.driver_fragment_container, driverFinishFragment);
                 fragmentTransaction.addToBackStack(null);
                 fragmentTransaction.commit();
             }
@@ -117,7 +116,7 @@ public class DriverArriveSpotFragment extends Fragment {
         switchToOccupiedSpot.start();
     }
 
-    private void occupySpot() {
+    private void occupyReservation() {
         String url = String.format("%s/reservations/%s/occupy", getString(R.string.api_address), mReservation.getId());
         StringRequest occupyRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override

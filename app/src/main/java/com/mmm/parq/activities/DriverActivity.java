@@ -19,8 +19,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.firebase.client.AuthData;
@@ -28,18 +30,15 @@ import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.mmm.parq.R;
-import com.mmm.parq.fragments.DriverArriveSpotFragment;
-import com.mmm.parq.fragments.DriverEndReservationFragment;
+import com.mmm.parq.fragments.DriverAcceptFragment;
 import com.mmm.parq.fragments.DriverFindSpotFragment;
+import com.mmm.parq.fragments.DriverFinishFragment;
 import com.mmm.parq.fragments.DriverHistoryFragment;
 import com.mmm.parq.fragments.DriverHomeFragment;
-import com.mmm.parq.fragments.DriverNavigationFragment;
-import com.mmm.parq.fragments.DriverOccupiedSpotFragment;
+import com.mmm.parq.fragments.DriverOccupyFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
+import com.mmm.parq.fragments.DriverReviewFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasUser;
@@ -52,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
@@ -59,11 +59,11 @@ public class DriverActivity extends AppCompatActivity implements
         HasLocation,
         HasUser,
         DriverFindSpotFragment.HostsDriverFindSpotFragment,
-        DriverNavigationFragment.OnDirectionsRequestedListener,
-        DriverOccupiedSpotFragment.OnNavigationCompletedListener,
+        DriverAcceptFragment.OnDirectionsRequestedListener,
+        DriverFinishFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
-        DriverEndReservationFragment.OnChangeFragmentListener,
-        DriverArriveSpotFragment.ArriveSpotListener {
+        DriverReviewFragment.HostsDriverReviewFragment,
+        DriverOccupyFragment.ArriveSpotListener {
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
@@ -248,16 +248,17 @@ public class DriverActivity extends AppCompatActivity implements
 
     // Implementing OnNavigationCompletedListener Interface
     @Override
-    public void showEndReservationFragment(double cost) {
-            DriverEndReservationFragment driverEndReservationFragment = new DriverEndReservationFragment();
+    public void showReviewFragment() {
+            DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
             FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+
             // TODO(kenzshelley) Remove this once Reservations include cost themselves.
             Bundle args = new Bundle();
-            args.putDouble("cost", cost);
-            driverEndReservationFragment.setArguments(args);
+            args.putString("reservationId", mReservation.getId());
+            driverReviewFragment.setArguments(args);
 
-            fragmentTransaction.replace(R.id.container, driverEndReservationFragment);
-            setState(DriverHomeFragment.State.END_RESERVATION);
+            fragmentTransaction.replace(R.id.container, driverReviewFragment);
+            setState(DriverHomeFragment.State.FINISHED);
             fragmentTransaction.commit();
     }
 
@@ -401,7 +402,7 @@ public class DriverActivity extends AppCompatActivity implements
             try {
                 mSpot = parseSpotResponse(spotFuture.get());
             } catch (Exception e) {
-                Log.w(TAG, e.toString());
+                Log.w(TAG, "Error parsing spot response: " + e.toString());
             }
 
             return mSpot;
@@ -444,11 +445,6 @@ public class DriverActivity extends AppCompatActivity implements
 
             return mUser;
         }
-    }
-
-    // TODO(kenzshelley) Remove this as soon as DriverEndReservationFragment handles resumptions properly.
-    public Spot getSpot() {
-        return mSpot;
     }
 
     // Private helper methods
@@ -516,13 +512,8 @@ public class DriverActivity extends AppCompatActivity implements
     }
 
     private Spot parseSpotResponse(String response) {
-        JsonParser parser = new JsonParser();
-        JsonObject spotObj = parser.parse(response).getAsJsonObject();
-        String id = spotObj.get("id").getAsString();
-        JsonObject attrObj = spotObj.get("attributes").getAsJsonObject();
-        HashMap<String, String> attrs = (new Gson()).fromJson(attrObj, new TypeToken<HashMap<String, String>>(){}.getType());
-
-        return new Spot(id, attrs);
+        Gson gson = new Gson();
+        return gson.fromJson(response, Spot.class);
     }
 
     private void redirectToLogin() {
@@ -537,8 +528,17 @@ public class DriverActivity extends AppCompatActivity implements
                 try {
                     mUser = getUser().get();
                     if (mUser == null) redirectToLogin();
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
                     Log.w(TAG, "Error initializing user: " + e.getMessage());
+                } catch (ExecutionException e) {
+                    VolleyError volleyError = (VolleyError) e.getCause();
+                    NetworkResponse networkResponse = volleyError.networkResponse;
+
+                    if (networkResponse.statusCode == 500) {
+                        Log.e(TAG, "Error getting user: " + volleyError.getMessage() +
+                                ". Redirecting to login.");
+                        redirectToLogin();
+                    }
                 }
 
                 String firstName = "No";

@@ -17,6 +17,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
+import com.google.gson.Gson;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasReservation;
 import com.mmm.parq.interfaces.HasSpot;
@@ -27,10 +28,11 @@ import com.mmm.parq.models.Spot;
 import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
 
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.CountDownLatch;
 
-public class DriverOccupiedSpotFragment extends Fragment {
+public class DriverFinishFragment extends Fragment {
     private Button mEndReservationButton;
+    private CountDownLatch reservationUpdatedLatch = new CountDownLatch(1);
     private OccupiedSpotCardView mOccupiedSpotCardView;
     private OnNavigationCompletedListener mCallback;
     private RelativeLayout mRelativeLayout;
@@ -40,14 +42,14 @@ public class DriverOccupiedSpotFragment extends Fragment {
     static private int CARD_WIDTH = 380;
     static private int CARD_BOTTOM_MARGIN = 4;
 
-    static private String TAG = DriverOccupiedSpotFragment.class.getSimpleName();
+    static private String TAG = DriverFinishFragment.class.getSimpleName();
 
     public interface OnNavigationCompletedListener extends MapController,
             HasSpot, HasReservation {
-        void showEndReservationFragment(double cost);
+        void showReviewFragment();
     }
 
-    public DriverOccupiedSpotFragment() {}
+    public DriverFinishFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,7 +58,7 @@ public class DriverOccupiedSpotFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_spot_occupied_driver, container, false);
+        View view = inflater.inflate(R.layout.fragment_finish_driver, container, false);
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.occupied_layout);
 
         // Clear the map
@@ -99,9 +101,20 @@ public class DriverOccupiedSpotFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 // Free the spot
-                leaveSpot();
+                finishReservation();
 
-                mCallback.showEndReservationFragment(mOccupiedSpotCardView.getCurrentCost());
+                Thread switchToReviewFragment = new Thread() {
+                    public void run() {
+                        try {
+                            reservationUpdatedLatch.await();
+                        } catch (InterruptedException e) {
+                            Log.w(TAG, e.getMessage());
+                        }
+
+                        mCallback.showReviewFragment();
+                    }
+                };
+                switchToReviewFragment.start();
             }
         });
 
@@ -119,11 +132,21 @@ public class DriverOccupiedSpotFragment extends Fragment {
         }
     }
 
-    private void leaveSpot() {
+    private void finishReservation() {
         String url = String.format("%s/reservations/%s/finish", getString(R.string.api_address), mReservation.getId());
         StringRequest leaveRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
+                // Finishing the reservation updates the reservation. Parse it and set it as the current reservation.
+                Gson gson = new Gson();
+                Reservation updatedReservation = gson.fromJson(response, Reservation.class);
+                mCallback.updateReservation(updatedReservation);
+                try {
+                    mReservation = mCallback.getReservation(updatedReservation.getId()).get();
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+                reservationUpdatedLatch.countDown();
             }
         }, new Response.ErrorListener() {
             @Override
