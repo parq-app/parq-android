@@ -3,6 +3,8 @@ package com.mmm.parq.fragments;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,12 +35,24 @@ public class HostHomeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_home, container, false);
 
-        FloatingActionButton fab = (FloatingActionButton) v.findViewById(R.id.fab);
+        final Toolbar toolbar = (Toolbar) v.findViewById(R.id.host_home_toolbar);
+        toolbar.setTitle(R.string.host_home_titlebar);
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getActivity().finish();
+            }
+        });
+
+        final FloatingActionButton fab = (FloatingActionButton) v.findViewById(R.id.new_spot_fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Fragment newSpotFragment = new HostNewSpotFragment();
                 getActivity().getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
                         .replace(R.id.host_fragment_container, newSpotFragment)
                         .commit();
             }
@@ -67,6 +81,7 @@ public class HostHomeFragment extends Fragment {
 
                             Fragment spotDetailsFragment = HostSpotDetailsFragment.newInstance(spotId);
                             HostHomeFragment.this.getActivity().getSupportFragmentManager().beginTransaction()
+                                    .addToBackStack(null)
                                     .replace(R.id.host_fragment_container, spotDetailsFragment)
                                     .commit();
                         } catch (JSONException e) {

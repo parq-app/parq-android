@@ -37,7 +37,7 @@ public class SpotAdapter extends BaseAdapter {
         if (convertView == null) {
             // if it's not recycled, initialize some attributes
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            hostSpotView = inflater.inflate(R.layout.host_spot_display, null);
+            hostSpotView = inflater.inflate(R.layout.host_spot_item, null);
         } else {
             hostSpotView = convertView;
         }
