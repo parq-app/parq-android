@@ -15,6 +15,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Display;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,7 @@ import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -65,6 +67,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     private State mState;
     private String mReservationId;
     private User mUser;
+    private View mView;
     private OnLocationReceivedListener mCallback;
 
     static public final int COARSE_LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -92,7 +95,17 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home_driver, container, false);
+        // This is necessary because the the google map fragment is weird.
+        if (mView != null) {
+            ViewGroup parent = (ViewGroup) mView.getParent();
+            if (parent != null)
+                parent.removeView(mView);
+        }
+        try {
+            mView = inflater.inflate(R.layout.fragment_home_driver, container, false);
+        } catch (InflateException e) {
+        /* map is already there, just return view as it is */
+        }
 
         requestLocationPermission();
 
@@ -125,7 +138,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         };
         stateThread.start();
 
-        return view;
+        return mView;
     }
 
     @Override

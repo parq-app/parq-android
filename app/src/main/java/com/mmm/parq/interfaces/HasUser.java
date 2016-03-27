@@ -6,4 +6,5 @@ import java.util.concurrent.Future;
 
 public interface HasUser {
     Future<User> getUser();
+    void setUser(User user);
 }

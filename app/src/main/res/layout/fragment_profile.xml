@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_marginTop="48dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:layout_gravity="center_horizontal"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:src="@drawable/person"/>
+    <TextView
+        android:id="@+id/user_name"
+        tools:text="Sally Smith"
+        android:layout_marginBottom="8dp"
+        android:textAlignment="center"
+        android:textSize="26sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/user_member_since"
+        tools:text="Parqing since 2016"
+        android:layout_marginBottom="24dp"
+        android:textSize="20sp"
+        android:textAlignment="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <View
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="24dp"
+        android:background="@color/colorPrimary"/>
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:id="@+id/email_layout"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:layout_centerVertical="true"
+                android:id="@+id/email_icon"
+                android:layout_marginEnd="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_email_24dp"/>
+            <TextView
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/email_icon"
+                android:id="@+id/user_email"
+                tools:text="email@gmail.com"
+                android:textSize="24sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_below="@+id/email_layout"
+            android:id="@+id/phone_layout"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/phone_icon"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginEnd="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_phone_24dp"/>
+            <TextView
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/phone_icon"
+                android:id="@+id/user_phone"
+                android:text="@string/phone_placeholder"
+                android:textSize="24sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_below="@+id/phone_layout"
+            android:id="@+id/birthday_layout"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:layout_centerVertical="true"
+                android:id="@+id/birthday_icon"
+                android:layout_marginEnd="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_today_24dp"/>
+            <TextView
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/birthday_icon"
+                android:id="@+id/user_birthday"
+                android:text="@string/birthday_placeholder"
+                android:textSize="24sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+         </RelativeLayout>
+     </RelativeLayout>
+
+</LinearLayout>
