@@ -1,4 +1,3 @@
-// my name is kenz and I eat farts
 package com.mmm.parq.activities;
 
 import android.content.Intent;
