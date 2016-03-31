@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.facebook.login.LoginManager;
 import com.firebase.client.Firebase;
 import com.mmm.parq.R;
 import com.mmm.parq.activities.LoginActivity;
@@ -35,6 +36,7 @@ public class DriverSettingsFragment extends Fragment {
                 switch (itemPosition) {
                     case 0:
                         logOut();
+                        LoginManager.getInstance().logOut();
                         break;
                     case 1:
                         break;
