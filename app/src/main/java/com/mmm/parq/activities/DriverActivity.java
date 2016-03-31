@@ -17,8 +17,11 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.NetworkResponse;
@@ -42,12 +45,16 @@ import com.mmm.parq.fragments.DriverOccupyFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverReviewFragment;
 import com.mmm.parq.fragments.DriverSettingsFragment;
+import com.mmm.parq.fragments.EditProfileFragment;
+import com.mmm.parq.fragments.PasswordDialogFragment;
+import com.mmm.parq.fragments.ProfileFragment;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasToolbar;
 import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.models.User;
+import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
 
 import java.util.HashMap;
@@ -62,12 +69,15 @@ public class DriverActivity extends AppCompatActivity implements
         HasLocation,
         HasUser,
         HasToolbar,
+        ProfileFragment.HostsProfileFragment,
+        EditProfileFragment.HostsEditProfileFragment,
         DriverFindSpotFragment.HostsDriverFindSpotFragment,
         DriverAcceptFragment.OnDirectionsRequestedListener,
         DriverFinishFragment.OnNavigationCompletedListener,
         DriverHomeFragment.OnLocationReceivedListener,
         DriverReviewFragment.HostsDriverReviewFragment,
-        DriverOccupyFragment.ArriveSpotListener {
+        DriverOccupyFragment.ArriveSpotListener,
+        PasswordDialogFragment.PasswordSetListener {
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
@@ -76,6 +86,8 @@ public class DriverActivity extends AppCompatActivity implements
     private RequestQueue mQueue;
     private Reservation mReservation;
     private Spot mSpot;
+    // This feels like a terrible idea...
+    private String mPassword;
     private DriverHomeFragment.State mState;
     private TextView mNameView;
     private Toolbar mToolbar;
@@ -160,7 +172,13 @@ public class DriverActivity extends AppCompatActivity implements
         view.getHeaderView(0).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                ProfileFragment profileFragment = new ProfileFragment();
+                mFragment = profileFragment;
+                mDrawerLayout.closeDrawers();
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.container, profileFragment).
+                        addToBackStack(null).
+                        commitAllowingStateLoss();
             }
         });
 
@@ -349,6 +367,17 @@ public class DriverActivity extends AppCompatActivity implements
         return null;
     }
 
+    // Implementing PasswordSetListener
+    @Override
+    public void setPassword(String password) {
+        mPassword = password;
+    }
+
+    @Override
+    public String getPassword() {
+        return mPassword;
+    }
+
     @Override
     public void setState(DriverHomeFragment.State state) {
         try {
@@ -426,6 +455,10 @@ public class DriverActivity extends AppCompatActivity implements
         }
     }
 
+    public void setUser(User user) {
+        mUser = user;
+    }
+
     // Implementing HasUser Interface
     public Future<User> getUser() {
         // Get user id
@@ -478,6 +511,13 @@ public class DriverActivity extends AppCompatActivity implements
 
     public void showToolbar() {
         getSupportActionBar().show();
+    }
+
+    public void centerLogo() {
+        ImageView imageView = (ImageView) findViewById(R.id.logo);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(imageView.getLayoutParams());
+        layoutParams.gravity = Gravity.CENTER;
+        imageView.setLayoutParams(layoutParams);
     }
 
     // Private helper methods

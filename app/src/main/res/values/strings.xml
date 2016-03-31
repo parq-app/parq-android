@@ -41,6 +41,7 @@
     <string name="prompt_first_name">First name</string>
     <string name="prompt_last_name">Last name</string>
     <string name="prompt_email">Email</string>
+    <string name="prompt_phone">Phone number</string>
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_register">Register</string>
@@ -66,4 +67,10 @@
     <string name="occupied">Occupied</string>
     <string name="vacant">Vacant</string>
 
+    <!-- Strings related to profile -->
+    <string name="edit_profile">Edit profile</string>
+    <string name="done">Done</string>
+    <string name="profile_photo">Profile photo</string>
+    <string name="phone_placeholder">No phone number :(</string>
+    <string name="birthday_placeholder">No birthday :(</string>
 </resources>

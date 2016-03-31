@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_marginTop="24dp"
@@ -15,20 +16,28 @@
         android:layout_marginBottom="24dp"
         android:layout_marginStart="16dp"
         android:src="@drawable/soloway_pic"/>
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="124dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_toRightOf="@+id/profile_image">
+        android:orientation="vertical"
+        android:layout_toEndOf="@+id/profile_image">
         <TextView
+            tools:text="Elliot Soloway"
+            android:layout_centerInParent="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Elliot Soloway"
-            android:textSize="24sp"
+            android:textSize="28sp"
             android:textColor="@android:color/white"
             android:layout_marginTop="8dp"
             android:paddingBottom="8dp"
             android:id="@+id/name"/>
-    </LinearLayout>
+        <TextView
+            android:layout_below="@+id/name"
+            android:layout_alignStart="@+id/name"
+            android:text="@string/edit_profile"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
 </RelativeLayout>

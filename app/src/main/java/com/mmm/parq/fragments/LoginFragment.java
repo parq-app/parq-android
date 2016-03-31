@@ -67,7 +67,6 @@ public class LoginFragment extends Fragment {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                attemptRegister();
                 FragmentManager fragmentManager = getFragmentManager();
                 RegisterFragment registerFragment = new RegisterFragment();
                 fragmentManager.beginTransaction().
