@@ -120,7 +120,6 @@ public class EditProfileFragment extends Fragment {
         final String updatedEmail = mEmailView.getText().toString();
         final String updatedPhone = mPhoneView.getText().toString();
 
-        Log.d(TAG, mFirebaseRef.getAuth().getProvider());
         // Updating email requires the user enter their password if they're using email/pw for auth.
         if (!updatedEmail.equals(mUser.getAttribute("email")) &&
                 "password".equals(mFirebaseRef.getAuth().getProvider())) {

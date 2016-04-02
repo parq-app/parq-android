@@ -41,12 +41,14 @@ public class RegisterFragment extends Fragment {
     private Firebase mFirebaseRef;
 
     // UI References
+    private Button mRegisterButton;
     private EditText mFirstNameView;
     private EditText mLastNameView;
     private EditText mEmailView;
     private EditText mPasswordView;
+    private String mEmail;
+    private String mPassword;
     private View mProgressView;
-    private Button mRegisterButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -71,7 +73,9 @@ public class RegisterFragment extends Fragment {
         mRegisterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                attemptRegister();
+                mEmail = mEmailView.getText().toString();
+                mPassword = mPasswordView.getText().toString();
+                mFirebaseRef.createUser(mEmail, mPassword, new UserCreationResultHandler());
             }
         });
         mProgressView = view.findViewById(R.id.login_progress);
@@ -81,6 +85,12 @@ public class RegisterFragment extends Fragment {
     }
 
     private void attemptRegister() {
+        mEmail = mEmailView.getText().toString();
+        mPassword = mPasswordView.getText().toString();
+        mFirebaseRef.createUser(mEmail, mPassword, new UserCreationResultHandler());
+    }
+
+    private void attemptStoreUserData() {
         String firstName = mFirstNameView.getText().toString();
         String lastName = mLastNameView.getText().toString();
         final String email = mEmailView.getText().toString();
@@ -96,7 +106,7 @@ public class RegisterFragment extends Fragment {
                 creds.put("firstName", firstName);
                 creds.put("lastName", lastName);
                 creds.put("email", email);
-                creds.put("password", password);
+                creds.put("uid", mFirebaseRef.getAuth().getUid());
             } catch (Exception e) {
                 Log.e(TAG, "error with json");
             }
@@ -109,17 +119,14 @@ public class RegisterFragment extends Fragment {
                     mPasswordView.setText("");
                     mEmailView.setText("");
                     Snackbar.make(getView().findViewById(R.id.register_layout), R.string.snackbar_register, Snackbar.LENGTH_LONG).show();
-                    mFirebaseRef.authWithPassword(email, password, new AuthResultHandler());
-
-                    // TODO(matt): add snackbar
-
+//                    mFirebaseRef.authWithPassword(email, password, new AuthResultHandler());
+                    startDriverActivity();
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     showProgress(false);
-                    Log.e(TAG, "error with volley");
-                    Log.e(TAG, error.toString());
+                    Log.e(TAG, "Error creating user: " + error.toString());
                 }
             });
             queue.add(jsonObjectRequest);
@@ -131,7 +138,7 @@ public class RegisterFragment extends Fragment {
         @Override
         public void onAuthenticated(AuthData authData) {
             showProgress(false);
-            startDriverActivity();
+            attemptStoreUserData();
         }
 
         @Override
@@ -147,6 +154,25 @@ public class RegisterFragment extends Fragment {
                     mPasswordView.setError(getString(R.string.error_incorrect_password));
                     mPasswordView.requestFocus();
                     break;
+                default:
+                    Log.e(TAG, "Unrecognized auth error: " + firebaseError.toString());
+            }
+        }
+    }
+
+    private class UserCreationResultHandler implements Firebase.ResultHandler {
+        @Override
+        public void onSuccess() {
+            showProgress(false);
+
+            // Log the user in now that the account has been created.
+            mFirebaseRef.authWithPassword(mEmail, mPassword, new AuthResultHandler());
+        }
+
+        @Override
+        public void onError(FirebaseError firebaseError) {
+            switch (firebaseError.getCode()) {
+                case FirebaseError.INVALID_EMAIL:
                 default:
                     Log.e(TAG, "Unrecognized auth error: " + firebaseError.toString());
             }
