@@ -1,5 +1,8 @@
 package com.mmm.parq.activities;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -19,10 +22,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.NetworkResponse;
@@ -34,6 +35,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.facebook.login.LoginManager;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
@@ -162,7 +164,7 @@ public class DriverActivity extends AppCompatActivity implements
         mPreviousItem = view.getMenu().getItem(0);
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar,
-                R.string.settings, R.string.settings) {
+                0, 0) {
 
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
@@ -222,7 +224,8 @@ public class DriverActivity extends AppCompatActivity implements
                         mFragment = new DriverHistoryFragment();
                         break;
                     case R.id.drawer_settings:
-                        mFragment = new DriverSettingsFragment();
+                        //mFragment = new DriverSettingsFragment();
+                        logOut();
                         break;
                     case R.id.drawer_host:
                         Intent i = new Intent(DriverActivity.this, HostActivity.class);
@@ -653,6 +656,32 @@ public class DriverActivity extends AppCompatActivity implements
             }
         };
         initializeUser.start();
+    }
+
+    private void logOut() {
+        final Activity activity = this;
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle("Logout?")
+                .setPositiveButton("Logout", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Firebase ref = new Firebase(getString(R.string.firebase_endpoint));
+                        ref.unauth();
+                        Intent i = new Intent(activity, LoginActivity.class);
+                        LoginManager.getInstance().logOut();
+                        startActivity(i);
+                        finish(); // makes sure you can't back button to the loggedin screen
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.d(TAG, "Cancelled logout");
+                        dialog.dismiss();
+                    }
+                })
+                .create()
+                .show();
     }
 
     // Facebook Login
