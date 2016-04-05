@@ -38,7 +38,7 @@
         android:textAlignment="center"
         android:gravity="center_horizontal"
         android:textStyle="bold"
-        android:textColor="@color/white"
+        android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
         android:padding="24dp"/>
 

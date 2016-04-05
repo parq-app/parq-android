@@ -57,7 +57,7 @@ public class HostSpotDetailsFragment extends Fragment {
 
         final Toolbar toolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
         toolbar.setTitle(R.string.host_spot_details_titlebar);
-        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), android.R.color.white));
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="colorPrimary">#4A148C</color>
-    <color name="colorPrimaryDark">#3B1070</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimaryDark">#000000</color>
     <color name="colorPrimaryLight">#EA80FC</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="textColorPrimary">#FFFFFF</color>
     <color name="toolbarTransparent">#00FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="white">#FFFFFF</color>
     <color name="vacantGreen">#64DD17</color>
     <color name="occupiedPurple">#AA00FF</color>
 </resources>

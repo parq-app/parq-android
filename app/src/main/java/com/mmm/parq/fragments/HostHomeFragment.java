@@ -37,7 +37,7 @@ public class HostHomeFragment extends Fragment {
 
         final Toolbar toolbar = (Toolbar) v.findViewById(R.id.host_home_toolbar);
         toolbar.setTitle(R.string.host_home_titlebar);
-        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.white));
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), android.R.color.white));
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,6 +74,7 @@ public class HostHomeFragment extends Fragment {
                 mHostSpotsGrid.setAdapter(new SpotAdapter(getActivity().getApplicationContext(), response));
 
                 mHostSpotsGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
                     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                         try {
                             JSONObject spotObj = response.getJSONObject(position);
