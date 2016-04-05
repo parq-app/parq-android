@@ -120,8 +120,9 @@ public class EditProfileFragment extends Fragment {
         final String updatedEmail = mEmailView.getText().toString();
         final String updatedPhone = mPhoneView.getText().toString();
 
-        // Updating email requires the user enter their password because it impacts auth.
-        if (!updatedEmail.equals(mUser.getAttribute("email"))) {
+        // Updating email requires the user enter their password if they're using email/pw for auth.
+        if (!updatedEmail.equals(mUser.getAttribute("email")) &&
+                "password".equals(mFirebaseRef.getAuth().getProvider())) {
             verifyPasswordAndSubmit(updatedEmail, updatedPhone);
         } else {
            sendUpdateUserRequest(updatedEmail, updatedPhone);
@@ -130,6 +131,9 @@ public class EditProfileFragment extends Fragment {
 
     private void updateAuthEmail(final String oldEmail, final String updatedEmail,
                                  final String updatedPhone, final HttpClient.VolleyCallback callback) {
+        if (mCallback.getPassword() == null) {
+            return;
+        }
         mFirebaseRef.changeEmail(oldEmail,  mCallback.getPassword(), updatedEmail, new Firebase.ResultHandler() {
             @Override
             public void onSuccess() {

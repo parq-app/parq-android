@@ -10,7 +10,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -20,8 +19,10 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.NetworkResponse;
@@ -30,6 +31,9 @@ import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.FacebookSdk;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
@@ -54,7 +58,6 @@ import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.models.User;
-import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
 
 import java.util.HashMap;
@@ -79,6 +82,7 @@ public class DriverActivity extends AppCompatActivity implements
         DriverOccupyFragment.ArriveSpotListener,
         PasswordDialogFragment.PasswordSetListener {
     private ActionBarDrawerToggle mDrawerToggle;
+    private AccessTokenTracker mAccessTokenTracker;
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
     private Fragment mFragment;
@@ -99,6 +103,24 @@ public class DriverActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(getApplicationContext());
+
+        mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+        if (mFirebaseRef.getAuth() == null) {
+            redirectToLogin();
+            return;
+        }
+
+        mFirebaseRef.addAuthStateListener(new Firebase.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(AuthData authData) {
+                if (authData == null) {
+                    redirectToLogin();
+                    return;
+                }
+            }
+        });
+
         setContentView(R.layout.activity_driver);
 
         mToolbar = (Toolbar) findViewById(R.id.my_toolbar);
@@ -109,19 +131,13 @@ public class DriverActivity extends AppCompatActivity implements
         ab.setDisplayShowTitleEnabled(false);
 
         mQueue = HttpClient.getInstance(getApplicationContext()).getRequestQueue();
-        mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
-        if (mFirebaseRef.getAuth() == null) {
-            redirectToLogin();
-        }
 
-        mFirebaseRef.addAuthStateListener(new Firebase.AuthStateListener() {
+        mAccessTokenTracker = new AccessTokenTracker() {
             @Override
-            public void onAuthStateChanged(AuthData authData) {
-                if (authData == null) {
-                    redirectToLogin();
-                }
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken currentAccessToken) {
+                onFacebookAccessTokenChange(currentAccessToken);
             }
-        });
+        };
 
         // Set initial fragment as home fragment.
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -491,15 +507,15 @@ public class DriverActivity extends AppCompatActivity implements
             } catch (InterruptedException e) {
                 Log.w(TAG, e.toString());
             } catch (ExecutionException e) {
-                    VolleyError volleyError = (VolleyError) e.getCause();
-                    NetworkResponse networkResponse = volleyError.networkResponse;
+                VolleyError volleyError = (VolleyError) e.getCause();
+                NetworkResponse networkResponse = volleyError.networkResponse;
 
-                    if (networkResponse.statusCode == 500) {
-                        Log.e(TAG, "Error getting user: " + volleyError.getMessage() +
-                                ". Redirecting to login.");
-                        redirectToLogin();
-                    }
+                if (networkResponse.statusCode == 500) {
+                    Log.e(TAG, "Error getting user: " + volleyError.getMessage() +
+                            ". Redirecting to login.");
+                    redirectToLogin();
                 }
+            }
 
             return mUser;
         }
@@ -599,6 +615,7 @@ public class DriverActivity extends AppCompatActivity implements
         Thread initializeUser = new Thread() {
             public void run() {
                 try {
+                    // this causes weird issues apparently
                     mUser = getUser().get();
                     if (mUser == null) {
                         redirectToLogin();
@@ -636,5 +653,15 @@ public class DriverActivity extends AppCompatActivity implements
             }
         };
         initializeUser.start();
+    }
+
+    // Facebook Login
+    private void onFacebookAccessTokenChange(AccessToken token) {
+        if (token == null) {
+            // Logged out of Facebook and currently authenticated with Firebase using Facebook, so do a logout
+            if (mFirebaseRef.getAuth() != null && mFirebaseRef.getAuth().getProvider().equals("facebook")) {
+                mFirebaseRef.unauth();
+            }
+        }
     }
 }

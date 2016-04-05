@@ -66,6 +66,8 @@
     <string name="num_ratings">Number of Ratings: %d</string>
     <string name="occupied">Occupied</string>
     <string name="vacant">Vacant</string>
+    <string name="action_upload_spot">Upload Spot</string>
+    <string name="facebook_app_id">1011978195552833</string>
 
     <!-- Strings related to profile -->
     <string name="edit_profile">Edit profile</string>
