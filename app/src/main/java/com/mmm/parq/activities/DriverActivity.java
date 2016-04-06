@@ -203,14 +203,6 @@ public class DriverActivity extends AppCompatActivity implements
         view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
-                Snackbar.make(mDrawerLayout, menuItem.getTitle() + " pressed", Snackbar.LENGTH_LONG).show();
-
-                // Check new item & uncheck old one.
-                menuItem.setChecked(true);
-                if (mPreviousItem != null) {
-                    mPreviousItem.setChecked(false);
-                }
-
                 // Display the fragment corresponding to this menu item.
                 FragmentManager fragmentManager = getSupportFragmentManager();
                 switch (menuItem.getItemId()) {
@@ -224,7 +216,7 @@ public class DriverActivity extends AppCompatActivity implements
                         mFragment = new DriverHistoryFragment();
                         break;
                     case R.id.drawer_settings:
-                        //mFragment = new DriverSettingsFragment();
+                        // mFragment = new DriverSettingsFragment();
                         logOut();
                         break;
                     case R.id.drawer_host:
