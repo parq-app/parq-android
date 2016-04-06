@@ -215,13 +215,16 @@ public class DriverActivity extends AppCompatActivity implements
                     case R.id.drawer_history:
                         mFragment = new DriverHistoryFragment();
                         break;
-                    case R.id.drawer_settings:
-                        // mFragment = new DriverSettingsFragment();
-                        logOut();
-                        break;
+                    // case R.id.drawer_settings:
+                    //    mFragment = new DriverSettingsFragment();
+                    //    break;
                     case R.id.drawer_host:
                         Intent i = new Intent(DriverActivity.this, HostActivity.class);
                         startActivity(i);
+                        break;
+                    case R.id.drawer_logout:
+                        logOut();
+                        break;
                 }
 
                 if (mFragment != null) {
