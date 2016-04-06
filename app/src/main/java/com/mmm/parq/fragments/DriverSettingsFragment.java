@@ -1,6 +1,5 @@
 package com.mmm.parq.fragments;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -48,7 +47,7 @@ public class DriverSettingsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view =  inflater.inflate(R.layout.fragment_settings_driver, container, false);
+        View view =  inflater.inflate(R.layout.fragment_driver_settings, container, false);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.settings_recycler);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mItemAdapter = new ItemAdapter();

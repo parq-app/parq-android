@@ -30,7 +30,7 @@ public class DriverFindSpotFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_find_spot_driver, container, false);
+        View view = inflater.inflate(R.layout.fragment_driver_find_spot, container, false);
 
         // Clear the map
         mCallback.clearMap();

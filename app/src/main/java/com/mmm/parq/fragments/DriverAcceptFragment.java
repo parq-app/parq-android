@@ -78,7 +78,7 @@ public class DriverAcceptFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_accept_driver, container,
+        View view = inflater.inflate(R.layout.fragment_driver_accept, container,
                 false);
 
         mIsTransitioning = false;
