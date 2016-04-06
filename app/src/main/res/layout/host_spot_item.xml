@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:stateListAnimator="@drawable/button_card_animator"
-    card_view:cardBackgroundColor="@color/colorPrimaryLight"
+    card_view:cardBackgroundColor="@android:color/white"
     card_view:contentPadding="20dp" >
 
     <TextView
