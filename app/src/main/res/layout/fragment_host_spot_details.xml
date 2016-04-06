@@ -16,7 +16,8 @@
             android:id="@+id/spot_details_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/colorPrimary" />
+            android:background="@color/colorPrimary"
+            android:elevation="4dp" />
 
         <ImageView
             android:layout_width="match_parent"
@@ -68,12 +69,11 @@
 
     <TextView
         android:id="@+id/details_spot_reserved"
-        android:layout_width="160dp"
-        android:layout_height="60dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom"
         android:layout_marginBottom="20dp"
-        android:gravity="center"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold"
         tools:text="Status" />
 

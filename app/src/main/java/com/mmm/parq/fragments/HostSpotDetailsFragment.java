@@ -57,7 +57,7 @@ public class HostSpotDetailsFragment extends Fragment {
 
         final Toolbar toolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
         toolbar.setTitle(R.string.host_spot_details_titlebar);
-        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), android.R.color.white));
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity(), android.R.color.white));
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,11 +85,11 @@ public class HostSpotDetailsFragment extends Fragment {
                     mSpotNumRatings.setText(String.format(getString(R.string.num_ratings), attrs.getInt("numRatings")));
                     if (attrs.getBoolean("isReserved")) {
                         mSpotIsReserved.setText(R.string.occupied);
-                        mSpotIsReserved.setBackgroundColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.occupiedPurple));
+                        mSpotIsReserved.setTextColor(ContextCompat.getColor(getActivity(), R.color.occupiedPurple));
                     }
                     else {
                         mSpotIsReserved.setText(R.string.vacant);
-                        mSpotIsReserved.setBackgroundColor(ContextCompat.getColor(getActivity().getApplicationContext(), R.color.vacantGreen));
+                        mSpotIsReserved.setTextColor(ContextCompat.getColor(getActivity(), R.color.vacantGreen));
                     }
                 } catch (JSONException e) {
                     Log.e(TAG, "Error while parsing spot attributes: " + e);
@@ -102,7 +102,7 @@ public class HostSpotDetailsFragment extends Fragment {
             }
         });
 
-        final RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
+        final RequestQueue queue = HttpClient.getInstance(getActivity()).getRequestQueue();
         queue.add(spotRequest);
 
         return v;

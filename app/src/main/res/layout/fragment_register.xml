@@ -18,9 +18,9 @@
         android:layout_height="wrap_content">
         <ImageView
             android:layout_gravity="center_horizontal"
-            android:layout_width="48dp"
-            android:layout_height="16dp"
-            android:src="@drawable/company_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:src="@drawable/parq_title_logo"
             android:textSize="16dp"
             android:layout_marginBottom="4dp"/>
 
