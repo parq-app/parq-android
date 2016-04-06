@@ -10,7 +10,8 @@
         android:id="@+id/new_spot_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary" />
+        android:background="@color/colorPrimary"
+        android:elevation="4dp" />
 
     <EditText
         android:id="@+id/new_spot_title"
@@ -35,11 +36,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/action_create_spot"
-        android:textAlignment="center"
-        android:gravity="center_horizontal"
         android:textStyle="bold"
         android:textColor="@color/textColorPrimary"
         android:background="@color/colorPrimary"
-        android:padding="24dp"/>
+        android:padding="24dp"
+        android:stateListAnimator="@drawable/button_card_animator" />
 
 </LinearLayout>
