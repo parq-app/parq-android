@@ -9,7 +9,6 @@ import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -26,7 +25,6 @@ import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -102,7 +100,7 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
                 parent.removeView(mView);
         }
         try {
-            mView = inflater.inflate(R.layout.fragment_home_driver, container, false);
+            mView = inflater.inflate(R.layout.fragment_driver_home, container, false);
         } catch (InflateException e) {
         /* map is already there, just return view as it is */
         }

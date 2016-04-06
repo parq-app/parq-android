@@ -58,7 +58,7 @@ public class DriverFinishFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_finish_driver, container, false);
+        View view = inflater.inflate(R.layout.fragment_driver_finish, container, false);
         mRelativeLayout = (RelativeLayout) view.findViewById(R.id.occupied_layout);
 
         // Clear the map

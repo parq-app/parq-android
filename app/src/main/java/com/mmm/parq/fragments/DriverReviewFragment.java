@@ -53,7 +53,7 @@ public class DriverReviewFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_review_driver, container, false);
+        View view = inflater.inflate(R.layout.fragment_driver_review, container, false);
 
         mCallback.hideToolbar();
 

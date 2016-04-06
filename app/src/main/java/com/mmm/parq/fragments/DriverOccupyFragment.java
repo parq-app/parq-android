@@ -41,7 +41,7 @@ public class DriverOccupyFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_occupy_driver,
+        View view = inflater.inflate(R.layout.fragment_driver_occupy,
                 container, false);
 
         Thread fetchData = new Thread() {
