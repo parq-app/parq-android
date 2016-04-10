@@ -63,6 +63,7 @@
 
     <!--Spot Detail Strings-->
     <string name="host_spot_details_titlebar">Spot Details</string>
+    <string name="spot_rating">Spot Rating</string>
     <string name="num_ratings">Number of Ratings: %d</string>
     <string name="occupied">Occupied</string>
     <string name="vacant">Vacant</string>
