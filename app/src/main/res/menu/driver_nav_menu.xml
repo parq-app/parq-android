@@ -1,30 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
 
+        <item
+            android:id="@+id/drawer_home"
+            android:checked="true"
+            android:icon="@drawable/ic_place_24dp"
+            android:title="@string/home" />
+
+        <item
+            android:id="@+id/drawer_payment"
+            android:icon="@drawable/ic_credit_card_24dp"
+            android:title="@string/payment" />
+
+        <item
+            android:id="@+id/drawer_history"
+            android:icon="@drawable/ic_restore_24dp"
+            android:title="@string/history" />
+
+        <!--
+        This is where the settings item would go
+        <item
+            android:id="@+id/drawer_settings"
+            android:icon="@drawable/ic_settings_24dp"
+            android:title="@string/settings" />
+            -->
+
+    </group>
+
+    <!-- Blank dummy item-->
     <item
-        android:id="@+id/drawer_home"
-        android:checked="true"
-        android:icon="@drawable/ic_place_24dp"
-        android:title="@string/home"/>
+        android:title=""
+        android:enabled="false" />
 
-    <item
-        android:id="@+id/drawer_payment"
-        android:icon="@drawable/ic_credit_card_24dp"
-        android:title="@string/payment"/>
+    <group android:checkableBehavior="none">
 
-    <item
-        android:id="@+id/drawer_history"
-        android:icon="@drawable/ic_restore_24dp"
-        android:title="@string/history"/>
+        <item
+            android:id="@+id/drawer_host"
+            android:icon="@drawable/ic_home_24dp"
+            android:title="@string/host" />
 
-    <item
-        android:id="@+id/drawer_settings"
-        android:icon="@drawable/ic_settings_24dp"
-        android:title="@string/logout"/>
+        <!-- Blank dummy item-->
+        <item
+            android:title=""
+            android:enabled="false" />
 
-    <item
-        android:id="@+id/drawer_host"
-        android:icon="@drawable/ic_home_24dp"
-        android:title="@string/host"/>
+        <item
+            android:id="@+id/drawer_logout"
+            android:icon="@drawable/ic_work_24dp"
+            android:title="@string/logout" />
 
+    </group>
 </menu>
