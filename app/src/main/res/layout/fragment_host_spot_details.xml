@@ -29,7 +29,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
-            android:textSize="22sp"
+            android:textSize="34sp"
             android:textColor="@color/colorPrimaryDark"
             tools:text="Spot Title" />
 
@@ -37,18 +37,26 @@
             android:id="@+id/details_spot_addr"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textColor="@color/colorPrimaryDark"
+            android:textSize="18sp"
             tools:text="Spot Address" />
 
         <View
             android:layout_height="1dp"
             android:layout_width="match_parent"
-            android:background="#90909090"
+            android:background="@color/separatorColor"
             android:layout_marginBottom="15dp"
             android:layout_marginTop="15dp"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:textStyle="italic"
+            android:textSize="16sp"
+            android:textAlignment="center"
+            android:text="@string/spot_rating"/>
 
         <RatingBar
             android:id="@+id/details_spot_rating"

@@ -19,6 +19,7 @@
         android:textAlignment="center"
         android:layout_marginTop="16dp"
         android:textSize="34dp"
+        android:textColor="@color/colorPrimaryDark"
         android:layout_below="@+id/spot_image"
         tools:text="$8.54"/>
     <TextView
@@ -30,6 +31,18 @@
         android:textAlignment="center"
         android:layout_below="@+id/cost"
         tools:text="1234 South University Ave"/>
+
+    <View
+        android:id="@+id/review_spot_separator"
+        android:layout_height="1dp"
+        android:layout_width="match_parent"
+        android:background="@color/separatorColor"
+        android:layout_below="@+id/spot_addr"
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp" />
+
     <TextView
         android:id="@+id/rate_spot_text"
         android:layout_width="match_parent"
@@ -38,7 +51,7 @@
         android:textStyle="italic"
         android:textSize="16dp"
         android:textAlignment="center"
-        android:layout_below="@+id/spot_addr"
+        android:layout_below="@+id/review_spot_separator"
         android:text="Rate this spot"/>
     <RatingBar
         android:id="@+id/rating_bar"
