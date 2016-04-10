@@ -48,7 +48,7 @@ public class HostNewSpotFragment extends Fragment {
 
         final Toolbar toolbar = (Toolbar) v.findViewById(R.id.new_spot_toolbar);
         toolbar.setTitle(R.string.host_new_spot_titlebar);
-        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity().getApplicationContext(), android.R.color.white));
+        toolbar.setTitleTextColor(ContextCompat.getColor(getActivity(), android.R.color.white));
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_24dp);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,7 +66,21 @@ public class HostNewSpotFragment extends Fragment {
             public void onClick(View v) {
                 String title = mTitleField.getText().toString();
                 String address = mAddressField.getText().toString();
-                uploadSpot(address, title);
+                boolean complete = true;
+
+                if (title.trim().equals("")) {
+                    mTitleField.setError("Title is a required field.");
+                    complete = false;
+                }
+
+                if (address.trim().equals("")) {
+                    mAddressField.setError("Address is a required field.");
+                    complete = false;
+                }
+
+                if (complete) {
+                    uploadSpot(address, title);
+                }
             }
         });
 
@@ -81,7 +95,7 @@ public class HostNewSpotFragment extends Fragment {
             String userId = ref.getAuth().getUid();
             data.put("userId", userId);
 
-            // TODO: pull the latlong from the entered address, not their cur loc
+            // TODO: maybe pull the latlong from the entered address, not their cur loc
             LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
             if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
