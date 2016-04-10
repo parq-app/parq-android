@@ -43,7 +43,7 @@
         <View
             android:layout_height="1dp"
             android:layout_width="match_parent"
-            android:background="#90909090"
+            android:background="@color/separatorColor"
             android:layout_marginBottom="15dp"
             android:layout_marginTop="15dp"
             android:layout_marginLeft="20dp"
