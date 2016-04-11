@@ -70,6 +70,9 @@
     <string name="action_upload_spot">Upload Spot</string>
     <string name="facebook_app_id">1011978195552833</string>
 
+    <!--Spot Reviews Strings-->
+    <string name="host_spot_reviews_titlebar">Spot Reviews</string>
+
     <!-- Strings related to profile -->
     <string name="edit_profile">Edit profile</string>
     <string name="done">Done</string>
