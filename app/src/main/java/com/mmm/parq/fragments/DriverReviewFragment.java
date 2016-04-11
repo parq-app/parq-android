@@ -46,6 +46,7 @@ public class DriverReviewFragment extends Fragment {
 
     public interface HostsDriverReviewFragment extends NeedsState, HasReservation, HasSpot,
             HasFragment, HasToolbar {
+        void clearData();
     }
 
     public DriverReviewFragment() {}
@@ -154,6 +155,9 @@ public class DriverReviewFragment extends Fragment {
                 return params;
             }
         };
+
+        // Clear data saved in the activity
+        mCallback.clearData();
 
         RequestQueue queue = HttpClient.getInstance(getActivity().getApplicationContext()).getRequestQueue();
         queue.add(ratingRequest);

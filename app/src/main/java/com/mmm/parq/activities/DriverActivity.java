@@ -534,6 +534,12 @@ public class DriverActivity extends AppCompatActivity implements
         imageView.setLayoutParams(layoutParams);
     }
 
+    @Override
+    public void clearData() {
+        mSpot = null;
+        mReservation = null;
+    }
+
     // Private helper methods
     private Future<String> requestUser(String userId) {
         RequestFuture<String> future = RequestFuture.newFuture();
