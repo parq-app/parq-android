@@ -2,16 +2,17 @@ package com.mmm.parq.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -19,6 +20,8 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.facebook.AccessToken;
+import com.facebook.Profile;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.google.gson.Gson;
@@ -27,10 +30,15 @@ import com.mmm.parq.interfaces.HasPassword;
 import com.mmm.parq.interfaces.HasToolbar;
 import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.models.User;
+import com.mmm.parq.utils.ConversionUtils;
 import com.mmm.parq.utils.HttpClient;
+import com.mmm.parq.utils.PictureUtils;
+import com.mmm.parq.utils.S3Manager;
+import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.FutureTask;
 
 public class EditProfileFragment extends Fragment {
     private EditText mEmailView;
@@ -38,6 +46,8 @@ public class EditProfileFragment extends Fragment {
     private Firebase mFirebaseRef;
     private HostsEditProfileFragment mCallback;
     private ImageView mCloseView;
+    private ImageView mProfileView;
+    private RelativeLayout mProfileLayout;
     private TextView mDoneView;
     private User mUser;
 
@@ -54,8 +64,10 @@ public class EditProfileFragment extends Fragment {
         mCallback.hideToolbar();
 
         mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+        mProfileView = (ImageView) view.findViewById(R.id.profile_image);
         mEmailView = (EditText) view.findViewById(R.id.edit_user_email);
         mPhoneView = (EditText) view.findViewById(R.id.edit_user_phone);
+        mProfileLayout = (RelativeLayout) view.findViewById(R.id.profile_pic_layout);
 
         Thread fetchData = new Thread() {
             public void run() {
@@ -65,6 +77,7 @@ public class EditProfileFragment extends Fragment {
                     Log.e(TAG, "Unable to fetch user: " + e.getMessage());
                 }
 
+                PictureUtils.setProfilePicture(getActivity(), mUser, mProfileView);
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -87,6 +100,13 @@ public class EditProfileFragment extends Fragment {
         };
         fetchData.start();
 
+        mProfileLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPictureEditFragment();
+            }
+        });
+
         mCloseView = (ImageView) view.findViewById(R.id.action_mode_close_button);
         mCloseView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,6 +128,11 @@ public class EditProfileFragment extends Fragment {
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
+    }
+
+    private void showPictureEditFragment() {
+        PictureEditFragment pictureEditFragment = new PictureEditFragment();
+        getFragmentManager().beginTransaction().replace(R.id.container, pictureEditFragment).commit();
     }
 
     private void startProfileFragment() {

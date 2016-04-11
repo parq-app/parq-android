@@ -42,9 +42,11 @@
     </android.support.v7.widget.Toolbar>
 
     <RelativeLayout
+        android:id="@+id/profile_pic_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <ImageView
+            android:id="@+id/profile_image"
             android:layout_gravity="start"
             android:layout_marginStart="16dp"
             android:layout_width="100dp"

@@ -25,6 +25,11 @@
     <string name="end_reservation">Leave spot</string>
     <string name="arrive_spot_button_text">Arrive</string>
 
+    <!-- Amazon Strings -->
+    <string name="identity_pool_id">us-east-1:a6670f81-9a08-4182-b29d-c8ae777f2b00</string>
+    <string name="facebook_login_provider">graph.facebook.com</string>
+    <string name="developer_provider_name">login.mmm.parq</string>
+    <string name="bucket_name">parq</string>
 
     <!-- Misc -->
     <string name="end_transaction_text"></string>
@@ -75,4 +80,5 @@
     <string name="profile_photo">Profile photo</string>
     <string name="phone_placeholder">No phone number :(</string>
     <string name="birthday_placeholder">No birthday :(</string>
+    <string name="update">Update</string>
 </resources>

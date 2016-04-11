@@ -3,6 +3,7 @@ package com.mmm.parq.fragments;
 import android.app.ActionBar;
 import android.content.Context;
 import android.media.Image;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -18,16 +19,24 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
+import com.facebook.AccessToken;
+import com.facebook.Profile;
 import com.firebase.client.Firebase;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasToolbar;
 import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.models.User;
 import com.mmm.parq.utils.ConversionUtils;
+import com.mmm.parq.utils.PictureUtils;
+import com.mmm.parq.utils.S3Manager;
+import com.squareup.picasso.Picasso;
+
+import java.util.concurrent.FutureTask;
 
 public class ProfileFragment extends Fragment {
     private HostsProfileFragment mCallback;
     private Firebase mFirebaseRef;
+    private ImageView mProfileView;
     private TextView mNameView;
     private TextView mEmailView;
     private TextView mPhoneView;
@@ -47,15 +56,14 @@ public class ProfileFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         mCallback.centerLogo();
 
-        updateUserInfo();
-
         mFirebaseRef = new Firebase(getString(R.string.firebase_endpoint));
+        mProfileView = (ImageView) view.findViewById(R.id.profile_image);
         mNameView = (TextView) view.findViewById(R.id.user_name);
         mEmailView = (TextView) view.findViewById(R.id.user_email);
         mPhoneView = (TextView) view.findViewById(R.id.user_phone);
         mBirthdayView = (TextView) view.findViewById(R.id.user_birthday);
         mMemberSinceView = (TextView) view.findViewById(R.id.user_member_since);
-
+        updateUserInfo();
 
         return view;
     }
@@ -108,6 +116,8 @@ public class ProfileFragment extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        PictureUtils.setProfilePicture(getActivity(), mUser, mProfileView);
+
                         mNameView.setText(fullName);
                         mEmailView.setText(mUser.getAttribute("email"));
                         mMemberSinceView.setText("Parqing since January 2016");
