@@ -100,6 +100,4 @@ public class DriverSettingsFragment extends Fragment {
         startActivity(i);
         getActivity().finish(); // makes sure you can't back button to the loggedin screen
     }
-
-
 }
