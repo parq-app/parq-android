@@ -1,6 +1,8 @@
 package com.mmm.parq.fragments;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -15,6 +17,8 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.github.davidmoten.geo.GeoHash;
+import com.github.davidmoten.geo.LatLong;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
 import com.mmm.parq.interfaces.HasReservation;
@@ -28,6 +32,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class DriverOccupyFragment extends Fragment {
     private Button mArriveSpotButton;
+    private Button mReturnToNavButton;
     private CountDownLatch reservationUpdatedLatch = new CountDownLatch(1);
     private Reservation mReservation;
     private Spot mSpot;
@@ -68,6 +73,14 @@ public class DriverOccupyFragment extends Fragment {
             }
         });
 
+        mReturnToNavButton = (Button) view.findViewById(R.id.return_to_nav_button);
+        mReturnToNavButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                returnToNav();
+            }
+        });
+
         return view;
     }
 
@@ -80,6 +93,17 @@ public class DriverOccupyFragment extends Fragment {
         } catch(ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement interface");
         }
+    }
+
+    private void returnToNav() {
+        LatLong latLong = GeoHash.decodeHash(mSpot.getAttribute("geohash"));
+        String uriString = String.format(getString(R.string.nav_intent_uri),
+                latLong.getLat(), latLong.getLon());
+        Uri gmmIntentUri = Uri.parse(uriString);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage(getString(R.string.maps_package));
+
+        getParentFragment().startActivity(mapIntent);
     }
 
     private void occupySpot() {

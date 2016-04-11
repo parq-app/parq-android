@@ -4,6 +4,19 @@
     android:layout_height="match_parent">
     <Button
         style="@style/Widget.AppCompat.Button"
+        android:id="@+id/return_to_nav_button"
+        android:text="@string/return_to_nav"
+        android:background="@drawable/rounded_button"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        android:layout_width="380dp"
+        android:layout_height="64dp"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/arrive_spot_button"
+        android:textAllCaps="false"
+        android:layout_margin="8dp"/>
+    <Button
+        style="@style/Widget.AppCompat.Button"
         android:id="@+id/arrive_spot_button"
         android:text="@string/arrive_spot_button_text"
         android:background="@drawable/rounded_button"
