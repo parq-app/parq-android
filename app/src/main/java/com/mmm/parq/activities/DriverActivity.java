@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -29,12 +30,14 @@ import android.widget.TextView;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
@@ -50,9 +53,10 @@ import com.mmm.parq.fragments.DriverHomeFragment;
 import com.mmm.parq.fragments.DriverOccupyFragment;
 import com.mmm.parq.fragments.DriverPaymentFragment;
 import com.mmm.parq.fragments.DriverReviewFragment;
-import com.mmm.parq.fragments.DriverSettingsFragment;
 import com.mmm.parq.fragments.EditProfileFragment;
 import com.mmm.parq.fragments.PasswordDialogFragment;
+import com.mmm.parq.fragments.PictureDialogFragment;
+import com.mmm.parq.fragments.PictureEditFragment;
 import com.mmm.parq.fragments.ProfileFragment;
 import com.mmm.parq.interfaces.HasLocation;
 import com.mmm.parq.interfaces.HasToolbar;
@@ -61,6 +65,9 @@ import com.mmm.parq.models.Reservation;
 import com.mmm.parq.models.Spot;
 import com.mmm.parq.models.User;
 import com.mmm.parq.utils.HttpClient;
+import com.mmm.parq.utils.PictureUtils;
+import com.mmm.parq.utils.S3Manager;
+import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +82,8 @@ public class DriverActivity extends AppCompatActivity implements
         HasUser,
         HasToolbar,
         ProfileFragment.HostsProfileFragment,
+        PictureDialogFragment.HostsPictureDialog,
+        PictureEditFragment.HostsPictureEditFragment,
         EditProfileFragment.HostsEditProfileFragment,
         DriverFindSpotFragment.HostsDriverFindSpotFragment,
         DriverAcceptFragment.OnDirectionsRequestedListener,
@@ -88,6 +97,7 @@ public class DriverActivity extends AppCompatActivity implements
     private DrawerLayout mDrawerLayout;
     private Firebase mFirebaseRef;
     private Fragment mFragment;
+    private ImageView mProfileView;
     private MenuItem mPreviousItem;
     private RequestQueue mQueue;
     private Reservation mReservation;
@@ -185,6 +195,10 @@ public class DriverActivity extends AppCompatActivity implements
         // Set the user's name in the nav drawer.
         mNameView = (TextView) view.getHeaderView(0).findViewById(R.id.name);
         setUserName();
+
+        // Set profile image
+        mProfileView = (ImageView) view.getHeaderView(0).findViewById(R.id.profile_image);
+        setProfilePicture();
 
         // Set listener for launching profile page
         view.getHeaderView(0).setOnClickListener(new View.OnClickListener() {
@@ -284,6 +298,8 @@ public class DriverActivity extends AppCompatActivity implements
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == DriverHomeFragment.FINE_LOCATION_PERMISSION_REQUEST_CODE) {
             // Access to the location has been granted to the app.
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -613,6 +629,26 @@ public class DriverActivity extends AppCompatActivity implements
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void setProfilePicture() {
+        Thread initializeUser = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mUser = getUser().get();
+                    if (mUser == null || mFirebaseRef.getAuth() == null) {
+                        redirectToLogin();
+                        return;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error getting user: " + e.getMessage());
+                }
+
+                PictureUtils.setProfilePicture(DriverActivity.this, mUser, mProfileView);
+            }
+        });
+        initializeUser.start();
     }
 
     private void setUserName() {

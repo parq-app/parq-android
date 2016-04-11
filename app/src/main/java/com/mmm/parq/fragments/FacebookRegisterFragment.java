@@ -118,6 +118,7 @@ public class FacebookRegisterFragment extends Fragment {
             String url = getString(R.string.api_address) + "/users";
             JSONObject creds = new JSONObject();
             try {
+                creds.put("profilePhotoId", "facebook");
                 creds.put("firstName", firstName);
                 creds.put("lastName", lastName);
                 creds.put("email", email);
