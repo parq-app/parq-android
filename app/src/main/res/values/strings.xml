@@ -24,6 +24,7 @@
     <string name="navigate_text">Navigate to spot</string>
     <string name="end_reservation">Leave spot</string>
     <string name="arrive_spot_button_text">Arrive</string>
+    <string name="return_to_nav">Return to navigation</string>
 
     <!-- Amazon Strings -->
     <string name="identity_pool_id">us-east-1:a6670f81-9a08-4182-b29d-c8ae777f2b00</string>
