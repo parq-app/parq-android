@@ -1,6 +1,8 @@
 package com.mmm.parq.fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -100,25 +102,23 @@ public class DriverFinishFragment extends Fragment {
         mEndReservationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Free the spot
-                finishReservation();
-
-                Thread switchToReviewFragment = new Thread() {
-                    public void run() {
-                        try {
-                            reservationUpdatedLatch.await();
-                        } catch (InterruptedException e) {
-                            Log.w(TAG, e.getMessage());
-                        }
-
-                        DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
-                        Bundle args = new Bundle();
-                        args.putString("reservationId", mReservation.getId());
-                        driverReviewFragment.setArguments(args);
-                        mCallback.setFragment(driverReviewFragment);
-                    }
-                };
-                switchToReviewFragment.start();
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Are you sure?")
+                        .setMessage("Clicking 'Leave spot' before actually leaving could result in your vehicle being towed.")
+                        .setPositiveButton("Leave spot", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finishReservation();
+                            }
+                        })
+                        .setNegativeButton("Go back", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create()
+                        .show();
             }
         });
 
@@ -137,6 +137,28 @@ public class DriverFinishFragment extends Fragment {
     }
 
     private void finishReservation() {
+        // Free the spot
+        requestFinishReservation();
+
+        Thread switchToReviewFragment = new Thread() {
+            public void run() {
+                try {
+                    reservationUpdatedLatch.await();
+                } catch (InterruptedException e) {
+                    Log.w(TAG, e.getMessage());
+                }
+
+                DriverReviewFragment driverReviewFragment = new DriverReviewFragment();
+                Bundle args = new Bundle();
+                args.putString("reservationId", mReservation.getId());
+                driverReviewFragment.setArguments(args);
+                mCallback.setFragment(driverReviewFragment);
+            }
+        };
+        switchToReviewFragment.start();
+    }
+
+    private void requestFinishReservation() {
         String url = String.format("%s/reservations/%s/finish", getString(R.string.api_address), mReservation.getId());
         StringRequest leaveRequest = new StringRequest(Request.Method.PUT, url, new Response.Listener<String>() {
             @Override
