@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
     <LinearLayout
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
         tools:context="com.mmm.parq.fragments.HostSpotDetailsFragment" >
 
         <android.support.v7.widget.Toolbar
@@ -44,34 +45,43 @@
             android:layout_height="1dp"
             android:layout_width="match_parent"
             android:background="@color/separatorColor"
-            android:layout_marginBottom="15dp"
+            android:layout_marginBottom="40dp"
             android:layout_marginTop="15dp"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/details_rating_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:textStyle="italic"
-            android:textSize="16sp"
-            android:textAlignment="center"
-            android:text="@string/spot_rating"/>
+            android:orientation="vertical">
 
-        <RatingBar
-            android:id="@+id/details_spot_rating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:isIndicator="true"
-            android:numStars="5"
-            android:rating="0"
-            android:stepSize="0.1" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="italic"
+                android:textSize="16sp"
+                android:textAlignment="center"
+                android:text="@string/spot_rating"/>
 
-        <TextView
-            android:id="@+id/details_spot_num_ratings"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="Number of Ratings: X" />
+            <RatingBar
+                android:id="@+id/details_spot_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:isIndicator="true"
+                android:numStars="5"
+                android:rating="0"
+                android:stepSize="0.1" />
+
+            <TextView
+                android:id="@+id/details_spot_num_ratings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                tools:text="Number of Ratings: X" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -79,10 +89,11 @@
         android:id="@+id/details_spot_reserved"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp"
         android:textSize="24sp"
         android:textStyle="bold"
         tools:text="Status" />
 
-</FrameLayout>
+</RelativeLayout>

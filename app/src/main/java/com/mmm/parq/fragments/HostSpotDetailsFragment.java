@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ public class HostSpotDetailsFragment extends Fragment {
     private TextView mSpotNumRatings;
     private TextView mSpotIsReserved;
 
+    /** Static factory method to create unique instances based on Spot ID **/
     public static HostSpotDetailsFragment newInstance(String spotId) {
         HostSpotDetailsFragment fragment = new HostSpotDetailsFragment();
         Bundle args = new Bundle();
@@ -55,6 +57,7 @@ public class HostSpotDetailsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_host_spot_details, container, false);
 
+        /** Set up toolbar **/
         final Toolbar toolbar = (Toolbar) v.findViewById(R.id.spot_details_toolbar);
         toolbar.setTitle(R.string.host_spot_details_titlebar);
         toolbar.setTitleTextColor(ContextCompat.getColor(getActivity(), android.R.color.white));
@@ -66,12 +69,26 @@ public class HostSpotDetailsFragment extends Fragment {
             }
         });
 
+        /** Initialize reviews page listener **/
+        final LinearLayout ratingContainer = (LinearLayout) v.findViewById(R.id.details_rating_container);
+        ratingContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Fragment spotReviewsFragment = HostSpotReviewsFragment.newInstance(mSpotId);
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .addToBackStack(null)
+                        .replace(R.id.host_fragment_container, spotReviewsFragment)
+                        .commit();
+            }
+        });
+
         mSpotTitle = (TextView) v.findViewById(R.id.details_spot_title);
         mSpotAddr = (TextView) v.findViewById(R.id.details_spot_addr);
         mSpotRating = (RatingBar) v.findViewById(R.id.details_spot_rating);
         mSpotNumRatings = (TextView) v.findViewById(R.id.details_spot_num_ratings);
         mSpotIsReserved = (TextView) v.findViewById(R.id.details_spot_reserved);
 
+        /** Get spot information and display it **/
         String spotUrl = getString(R.string.api_address) + "/spots/" + mSpotId;
         JsonObjectRequest spotRequest = new JsonObjectRequest(spotUrl, null, new Response.Listener<JSONObject>() {
             @Override
@@ -83,22 +100,15 @@ public class HostSpotDetailsFragment extends Fragment {
                     mSpotAddr.setText(attrs.getString("addr"));
                     mSpotRating.setRating((float) attrs.getDouble("rating"));
                     mSpotNumRatings.setText(String.format(getString(R.string.num_ratings), attrs.getInt("numRatings")));
-                    if (attrs.getBoolean("isReserved")) {
-                        mSpotIsReserved.setText(R.string.occupied);
-                        mSpotIsReserved.setTextColor(ContextCompat.getColor(getActivity(), R.color.occupiedPurple));
-                    }
-                    else {
-                        mSpotIsReserved.setText(R.string.vacant);
-                        mSpotIsReserved.setTextColor(ContextCompat.getColor(getActivity(), R.color.vacantGreen));
-                    }
+                    setSpotIsReserved(attrs.getBoolean("isReserved"));
                 } catch (JSONException e) {
-                    Log.e(TAG, "Error while parsing spot attributes: " + e);
+                    Log.e(TAG, "Exception while parsing spot attributes: " + e);
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "There was an error getting the specified spot: " + error);
+                Log.e(TAG, "Volley error getting the specified spot: " + error);
             }
         });
 
@@ -106,5 +116,16 @@ public class HostSpotDetailsFragment extends Fragment {
         queue.add(spotRequest);
 
         return v;
+    }
+
+    private void setSpotIsReserved(boolean reserved) {
+        if (reserved) {
+            mSpotIsReserved.setText(R.string.occupied);
+            mSpotIsReserved.setTextColor(ContextCompat.getColor(getActivity(), R.color.occupiedPurple));
+        }
+        else {
+            mSpotIsReserved.setText(R.string.vacant);
+            mSpotIsReserved.setTextColor(ContextCompat.getColor(getActivity(), R.color.vacantGreen));
+        }
     }
 }
