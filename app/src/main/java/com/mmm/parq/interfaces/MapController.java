@@ -12,4 +12,5 @@ public interface MapController {
     void removeEndMarker();
     void drawPathToSpot(List<LatLng> path, LatLong spotLocation);
     void zoomCameraToDestinationMarker();
+    void zoomCameraToCurLocationAndDestMarker();
 }

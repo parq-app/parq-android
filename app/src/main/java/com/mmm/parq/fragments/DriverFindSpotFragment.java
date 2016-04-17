@@ -128,7 +128,9 @@ public class DriverFindSpotFragment extends Fragment {
             if (mPlace != null) {
                 mPlaceAddressView.setText(mPlace.getName());
                 LatLong latLong = new LatLong(mPlace.getLatLng().latitude, mPlace.getLatLng().longitude);
+                mCallback.removeEndMarker();
                 mCallback.addDestinationMarker(latLong);
+                mCallback.zoomCameraToCurLocationAndDestMarker();
                 Log.i(TAG, mPlace.getName().toString());
             }
         }

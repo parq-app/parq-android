@@ -382,6 +382,11 @@ public class DriverActivity extends AppCompatActivity implements
         ((DriverHomeFragment) mFragment).zoomCameraToDestinationMarker();
     }
 
+    @Override
+    public void zoomCameraToCurLocationAndDestMarker() {
+        ((DriverHomeFragment) mFragment).zoomCameraToCurLocationAndDestMarker();
+    }
+
     // Implementing HasLocation Interface
     @Override
     public void setLocation(Location location) {

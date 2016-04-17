@@ -306,6 +306,27 @@ public class DriverHomeFragment extends Fragment implements OnMapReadyCallback,
         mMap.animateCamera(cameraUpdate);
     }
 
+    public void zoomCameraToCurLocationAndDestMarker() {
+        // get the size of the screen
+        Activity activity = this.getActivity();
+        WindowManager wm = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        // make a lat long bounds and move the camera to it
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(mDestMarker.getPosition());
+        LatLng curLatLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        builder.include(curLatLng);
+
+        LatLngBounds bounds = builder.build();
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 150);
+        mMap.setPadding(0, ConversionUtils.dpToPx(getActivity(), 48), 0, ConversionUtils.dpToPx(getActivity(), 60));
+        mMap.animateCamera(cameraUpdate);
+
+    }
+
     public void zoomCameraToDestinationMarker() {
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(mDestMarker.getPosition())
