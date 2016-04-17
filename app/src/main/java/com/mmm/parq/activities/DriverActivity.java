@@ -38,6 +38,7 @@ import com.facebook.login.LoginManager;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 import com.github.davidmoten.geo.LatLong;
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 import com.mmm.parq.R;
@@ -55,6 +56,8 @@ import com.mmm.parq.fragments.PictureDialogFragment;
 import com.mmm.parq.fragments.PictureEditFragment;
 import com.mmm.parq.fragments.ProfileFragment;
 import com.mmm.parq.interfaces.HasLocation;
+import com.mmm.parq.interfaces.HasNavDrawer;
+import com.mmm.parq.interfaces.HasPlace;
 import com.mmm.parq.interfaces.HasToolbar;
 import com.mmm.parq.interfaces.HasUser;
 import com.mmm.parq.models.Reservation;
@@ -73,6 +76,8 @@ import java.util.concurrent.FutureTask;
 
 public class DriverActivity extends AppCompatActivity implements
         HasLocation,
+        HasNavDrawer,
+        HasPlace,
         HasUser,
         HasToolbar,
         ProfileFragment.HostsProfileFragment,
@@ -93,6 +98,7 @@ public class DriverActivity extends AppCompatActivity implements
     private Fragment mFragment;
     private ImageView mProfileView;
     private MenuItem mPreviousItem;
+    private Place mUserPlace;
     private RequestQueue mQueue;
     private Reservation mReservation;
     private Spot mSpot;
@@ -550,6 +556,23 @@ public class DriverActivity extends AppCompatActivity implements
         mReservation = null;
     }
 
+    // Implementing HasNavDrawer interface
+    @Override
+    public void openDrawer() {
+        mDrawerLayout.openDrawer(Gravity.LEFT);
+    }
+
+    @Override
+    public void closeDrawer() {
+        mDrawerLayout.closeDrawer(Gravity.LEFT);
+    }
+
+    // Implementing HasPlace interface
+    @Override
+    public void setPlace(Place place) {
+        mUserPlace = place;
+    }
+
     // Private helper methods
     private Future<String> requestUser(String userId) {
         RequestFuture<String> future = RequestFuture.newFuture();
@@ -589,8 +612,19 @@ public class DriverActivity extends AppCompatActivity implements
             protected Map<String, String> getParams() {
                 Map<String, String>  params = new HashMap<>();
                 params.put("userId", mFirebaseRef.getAuth().getUid());
-                params.put("latitude", String.valueOf(mUserLocation.getLatitude()));
-                params.put("longitude", String.valueOf(mUserLocation.getLongitude()));
+                String lat = null;
+                String lng = null;
+
+                if (mUserPlace != null) {
+                    lat = String.valueOf(mUserPlace.getLatLng().latitude);
+                    lng = String.valueOf(mUserPlace.getLatLng().longitude);
+                } else {
+                    lat = String.valueOf(mUserLocation.getLatitude());
+                    lng = String.valueOf(mUserLocation.getLongitude());
+                }
+
+                params.put("latitude", lat);
+                params.put("longitude", lng);
                 return params;
             }
         };
