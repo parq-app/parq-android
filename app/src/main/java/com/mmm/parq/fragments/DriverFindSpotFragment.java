@@ -146,6 +146,7 @@ public class DriverFindSpotFragment extends Fragment {
         // Start the navigation fragment.
         mCallback.setState(DriverHomeFragment.State.RESERVED);
         mCallback.setPlace(mPlace);
+        mCallback.removeEndMarker();
         DriverAcceptFragment driverAcceptFragment = new DriverAcceptFragment();
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.driver_fragment_container, driverAcceptFragment);

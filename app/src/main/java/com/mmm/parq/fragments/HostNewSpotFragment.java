@@ -122,7 +122,8 @@ public class HostNewSpotFragment extends Fragment {
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             mPlace = PlaceAutocomplete.getPlace(getActivity(), data);
             if (mPlace != null) {
-                mAddressField.setText(mPlace.getAddress());
+                //mAddressField.setText(mPlace.getAddress());
+                mAddressField.setText(mPlace.getName());
                 Log.i(TAG, mPlace.getName().toString());
             }
         }
