@@ -1,6 +1,7 @@
 package com.mmm.parq.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -21,8 +23,13 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.firebase.client.Firebase;
+import com.github.davidmoten.geo.LatLong;
 import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.mmm.parq.R;
 import com.mmm.parq.utils.HttpClient;
 
@@ -35,6 +42,9 @@ public class HostNewSpotFragment extends Fragment {
     private GoogleApiClient mClient;
     private EditText mTitleField;
     private EditText mAddressField;
+    private Place mPlace;
+
+    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,6 +69,26 @@ public class HostNewSpotFragment extends Fragment {
 
         mTitleField = (EditText) v.findViewById(R.id.new_spot_title);
         mAddressField = (EditText) v.findViewById(R.id.new_spot_address);
+        mAddressField.setKeyListener(null);
+        mAddressField.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "click");
+                try {
+                    Intent intent =
+                            new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+                                    .build(getActivity());
+                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+                } catch (GooglePlayServicesRepairableException e) {
+                    Log.d(TAG, "error " + e.getMessage());
+                    // TODO: Handle the error.
+                } catch (GooglePlayServicesNotAvailableException e) {
+                    // TODO: Handle the error.
+                    Log.d(TAG, "error " + e.getMessage());
+                }
+
+            }
+        });
 
         final Button listSpot = (Button) v.findViewById(R.id.create_spot_button);
         listSpot.setOnClickListener(new View.OnClickListener() {
@@ -73,7 +103,7 @@ public class HostNewSpotFragment extends Fragment {
                     complete = false;
                 }
 
-                if (address.trim().equals("")) {
+                if (address.trim().equals("Enter Address")) {
                     mAddressField.setError("Address is a required field.");
                     complete = false;
                 }
@@ -85,6 +115,17 @@ public class HostNewSpotFragment extends Fragment {
         });
 
         return v;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
+            mPlace = PlaceAutocomplete.getPlace(getActivity(), data);
+            if (mPlace != null) {
+                mAddressField.setText(mPlace.getAddress());
+                Log.i(TAG, mPlace.getName().toString());
+            }
+        }
     }
 
     private void uploadSpot(String address, String title) {
@@ -100,8 +141,8 @@ public class HostNewSpotFragment extends Fragment {
             if (ContextCompat.checkSelfPermission(getActivity().getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 Location loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                data.put("lat", loc.getLatitude());
-                data.put("long", loc.getLongitude());
+                data.put("lat", mPlace.getLatLng().latitude);
+                data.put("long", mPlace.getLatLng().longitude);
             }
 
             data.put("addr", address);
