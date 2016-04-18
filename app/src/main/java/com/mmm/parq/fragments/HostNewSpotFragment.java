@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -41,7 +42,8 @@ public class HostNewSpotFragment extends Fragment {
 
     private GoogleApiClient mClient;
     private EditText mTitleField;
-    private EditText mAddressField;
+    private TextView mAddressField;
+    private RelativeLayout mAddressHolder;
     private Place mPlace;
 
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
@@ -68,9 +70,9 @@ public class HostNewSpotFragment extends Fragment {
         });
 
         mTitleField = (EditText) v.findViewById(R.id.new_spot_title);
-        mAddressField = (EditText) v.findViewById(R.id.new_spot_address);
-        mAddressField.setKeyListener(null);
-        mAddressField.setOnClickListener(new View.OnClickListener() {
+        mAddressField = (TextView) v.findViewById(R.id.new_spot_address);
+        mAddressHolder = (RelativeLayout) v.findViewById(R.id.spot_addr_holder);
+        mAddressHolder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "click");
